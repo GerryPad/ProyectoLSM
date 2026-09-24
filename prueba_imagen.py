@@ -37,12 +37,10 @@ CONEXIONES = [
 ]
 
 # Ruta
-ruta_imagen = "dataset/MSL-ABC/lsm-abc-B/test/V/S18-V-1-3.jpg"
+ruta_imagen = "dataset/MSL-ABC/lsm-abc-A/train/A/S1-A-4-0.jpg"
 ruta_modelo = "hand_landmarker.task"
 
-
 # abrimos la imagen con OPENCV
-
 imagen = cv2.imread(ruta_imagen)
 
 if imagen is None:
@@ -53,7 +51,6 @@ print("Imagen cargada correctamente")
 
 
 # preparamos mediaPipe
-
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
 HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
@@ -70,11 +67,9 @@ opciones = HandLandmarkerOptions(
 detector = HandLandmarker.create_from_options(opciones)
 
 # 4. CONVERTIR BGR → RGB
-
 imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
 
 # 5. CONVERTIRLA A UNA IMAGEN DE MEDIAPIPE
-
 imagen_mp = mp.Image(
     image_format=mp.ImageFormat.SRGB,
     data=imagen_rgb
@@ -85,7 +80,6 @@ resultado = detector.detect(imagen_mp)
 
 
 # encontro mano?
-
 if resultado.hand_landmarks:
 
     print("¡Mano detectada!")
@@ -95,10 +89,47 @@ if resultado.hand_landmarks:
 
     # Dimensiones de la imagen
     alto, ancho, _ = imagen.shape
+    muneca = mano[0]#sera nuesto puto de referencia
+    x0 = muneca.x
+    y0 = muneca.y
+    z0 = muneca.z
 
+    #resta ante la referencia(normalizar)
+    for numero, punto in enumerate(mano):
+
+        x_relativo = punto.x - x0
+        y_relativo = punto.y - y0
+        z_relativo = punto.z - z0
+
+        print("Landmark", numero)
+
+        print("Original:")
+        print(punto.x, punto.y, punto.z)
+
+        print("Relativo:")
+        print(x_relativo, y_relativo, z_relativo)
+
+        print("----------------")
+
+    #muneca,p.pulgar,indice,medio,anular,menique
+    puntos_importantes = [0, 4, 8, 12, 16, 20]
+
+    for numero in puntos_importantes:
+
+        punto = mano[numero]
+
+        x_relativo = punto.x - x0
+        y_relativo = punto.y - y0
+        z_relativo = punto.z - z0
+
+        print(
+            numero,
+            "x:", round(x_relativo, 3),
+            "y:", round(y_relativo, 3),
+            "z:", round(z_relativo, 3)
+        )
 
     # dibuja lineas
-
     for inicio, fin in CONEXIONES:
 
         punto_inicio = mano[inicio]
