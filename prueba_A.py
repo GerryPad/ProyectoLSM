@@ -6,7 +6,7 @@ import pandas as pd
 # -------------------------------------------------
 # 1. RUTA ESPECÍFICA DE PRUEBA (Solo la A de train)
 # -------------------------------------------------
-ruta_carpeta_a = "MSL-ABC/lsm-abc-A/train/A"
+ruta_carpeta_a = "dataset/MSL-ABC/lsm-abc-A/train/A"
 ruta_modelo = "hand_landmarker.task"
 
 BaseOptions = mp.tasks.BaseOptions
@@ -48,9 +48,18 @@ if os.path.exists(ruta_carpeta_a):
             if resultado.hand_landmarks:
                 mano = resultado.hand_landmarks[0]
                 fila_landmarks = []
+
+                muneca = mano[0]#sera nuesto punto de referencia
+                x0 = muneca.x
+                y0 = muneca.y
+                z0 = muneca.z
                 
                 for punto in mano:
-                    fila_landmarks.extend([punto.x, punto.y, punto.z])
+                    x_relativo = punto.x - x0
+                    y_relativo = punto.y - y0
+                    z_relativo = punto.z - z0
+                    #fila_landmarks.extend([punto.x, punto.y, punto.z])
+                    fila_landmarks.extend([x_relativo, y_relativo, z_relativo])
                 
                 datos.append(fila_landmarks)
                 etiquetas.append("A") # Etiqueta fija para esta prueba
@@ -74,7 +83,7 @@ if len(datos) > 0:
     df = pd.DataFrame(datos, columns=columnas)
     df['etiqueta'] = etiquetas
     
-    df.to_csv("test_letra_a.csv", index=False)
+    df.to_csv("test_letra_a_normalizado.csv", index=False)
     print(f"¡Prueba exitosa! Se guardaron {len(datos)} registros de la letra A en 'test_letra_a.csv'.")
 else:
     print("No se detectaron manos en las imágenes de esta carpeta.")
