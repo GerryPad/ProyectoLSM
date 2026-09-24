@@ -1,8 +1,47 @@
 import cv2
 import mediapipe as mp
 
-ruta_imagen = "MSL-ABC/lsm-abc-B/test/V/S18-V-1-3.jpg"
+CONEXIONES = [
+    # Pulgar
+    (0, 1),
+    (1, 2),
+    (2, 3),
+    (3, 4),
+
+    # Índice
+    (0, 5),
+    (5, 6),
+    (6, 7),
+    (7, 8),
+
+    # Medio
+    (5, 9),
+    (9, 10),
+    (10, 11),
+    (11, 12),
+
+    # Anular
+    (9, 13),
+    (13, 14),
+    (14, 15),
+    (15, 16),
+
+    # Meñique
+    (13, 17),
+    (17, 18),
+    (18, 19),
+    (19, 20),
+
+    # Cerrar la palma
+    (0, 17)
+]
+
+# Ruta
+ruta_imagen = "dataset/MSL-ABC/lsm-abc-B/test/V/S18-V-1-3.jpg"
 ruta_modelo = "hand_landmarker.task"
+
+
+# abrimos la imagen con OPENCV
 
 imagen = cv2.imread(ruta_imagen)
 
@@ -11,6 +50,9 @@ if imagen is None:
     exit()
 
 print("Imagen cargada correctamente")
+
+
+# preparamos mediaPipe
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
@@ -27,57 +69,79 @@ opciones = HandLandmarkerOptions(
 
 detector = HandLandmarker.create_from_options(opciones)
 
+# 4. CONVERTIR BGR → RGB
+
 imagen_rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+
+# 5. CONVERTIRLA A UNA IMAGEN DE MEDIAPIPE
 
 imagen_mp = mp.Image(
     image_format=mp.ImageFormat.SRGB,
     data=imagen_rgb
 )
 
+# detecta la mano
 resultado = detector.detect(imagen_mp)
+
+
+# encontro mano?
 
 if resultado.hand_landmarks:
 
     print("¡Mano detectada!")
 
+    # Primera mano detectada
     mano = resultado.hand_landmarks[0]
+
+    # Dimensiones de la imagen
     alto, ancho, _ = imagen.shape
 
+
+    # dibuja lineas
+
+    for inicio, fin in CONEXIONES:
+
+        punto_inicio = mano[inicio]
+        punto_fin = mano[fin]
+
+        x1 = int(punto_inicio.x * ancho)
+        y1 = int(punto_inicio.y * alto)
+
+        x2 = int(punto_fin.x * ancho)
+        y2 = int(punto_fin.y * alto)
+
+        cv2.line(
+            imagen,
+            (x1, y1),
+            (x2, y2),
+            (255, 0, 0),
+            2
+        )
+
+
+    # dibuja landmarks
     for numero, punto in enumerate(mano):
 
-        print("Landmark", numero)
-        print("x:", punto.x)
-        print("y:", punto.y)
-        print("z:", punto.z)
-        print("----------------")
-
-        x_pixel = int(punto.x * ancho)
-        y_pixel = int(punto.y * alto)
+        x = int(punto.x * ancho)
+        y = int(punto.y * alto)
 
         cv2.circle(
             imagen,
-            (x_pixel, y_pixel),
+            (x, y),
             5,
             (0, 255, 0),
             -1
         )
-    
-    print("Cantidad de landmarks:", len(mano))
-    
-    nombre_ventana = "Landmarks"
-    cv2.imshow(nombre_ventana, imagen)
-    
-    while True:
-        tecla = cv2.waitKey(100)
-        if tecla != -1:  
-            break
-            
-        if cv2.getWindowProperty(nombre_ventana, cv2.WND_PROP_VISIBLE) < 1:
-            break
 
+
+    # imagen
+    cv2.imshow("Esqueleto de la mano", imagen)
+
+    cv2.waitKey(0)
     cv2.destroyAllWindows()
-else:
-    print("No se detectó ninguna mano")
 
+else:
+
+    print("No se detectó ninguna mano")
 
 detector.close()
