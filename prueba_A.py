@@ -2,7 +2,7 @@ import os
 import cv2
 import mediapipe as mp
 import pandas as pd
-
+import math
 # -------------------------------------------------
 # 1. RUTA ESPECÍFICA DE PRUEBA (Solo la A de train)
 # -------------------------------------------------
@@ -48,19 +48,36 @@ if os.path.exists(ruta_carpeta_a):
             if resultado.hand_landmarks:
                 mano = resultado.hand_landmarks[0]
                 fila_landmarks = []
+                landmarks_relativos = []
 
                 muneca = mano[0]#sera nuesto punto de referencia
                 x0 = muneca.x
                 y0 = muneca.y
                 z0 = muneca.z
-                
+
                 for punto in mano:
                     x_relativo = punto.x - x0
                     y_relativo = punto.y - y0
                     z_relativo = punto.z - z0
-                    #fila_landmarks.extend([punto.x, punto.y, punto.z])
-                    fila_landmarks.extend([x_relativo, y_relativo, z_relativo])
+
+                    landmarks_relativos.append([x_relativo, y_relativo, z_relativo])
+
+                distancia_maxima = 0
+                for x, y, z in landmarks_relativos:
+
+                    distancia = math.sqrt(x**2 + y**2 + z**2)
+
+                    if distancia > distancia_maxima:
+                        distancia_maxima = distancia
                 
+                
+                for x, y, z in landmarks_relativos:
+                    x_normalizado = x / distancia_maxima
+                    y_normalizado = y / distancia_maxima
+                    z_normalizado = z / distancia_maxima
+
+                    fila_landmarks.extend([x_normalizado, y_normalizado, z_normalizado])
+
                 datos.append(fila_landmarks)
                 etiquetas.append("A") # Etiqueta fija para esta prueba
             contador_imagenes += 1
@@ -83,7 +100,7 @@ if len(datos) > 0:
     df = pd.DataFrame(datos, columns=columnas)
     df['etiqueta'] = etiquetas
     
-    df.to_csv("test_letra_a_normalizado.csv", index=False)
-    print(f"¡Prueba exitosa! Se guardaron {len(datos)} registros de la letra A en 'test_letra_a.csv'.")
+    df.to_csv("test_letra_a_norm_posicion_escala.csv", index=False)
+    print(f"¡Prueba exitosa! Se guardaron {len(datos)} registros de la letra A en 'test_letra_a_norm_posicion_escala.csv'.")
 else:
     print("No se detectaron manos en las imágenes de esta carpeta.")
