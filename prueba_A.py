@@ -6,8 +6,8 @@ import math
 # -------------------------------------------------
 # 1. RUTA ESPECÍFICA DE PRUEBA (Solo la A de train)
 # -------------------------------------------------
-#ruta_carpeta_a = "dataset/MSL-ABC/lsm-abc-A/train/A"
-ruta_carpeta_a = "A_fotos"
+ruta_carpeta_a = "dataset/MSL-ABC/lsm-abc-A/train/A"
+#ruta_carpeta_a = "A_fotos"
 ruta_modelo = "hand_landmarker.task"
 
 BaseOptions = mp.tasks.BaseOptions
@@ -109,7 +109,7 @@ if len(datos) > 0:
     df = pd.DataFrame(datos, columns=columnas)
     df['etiqueta'] = etiquetas
     
-    df.to_csv("test_letra_a_norm_posicion_escala.csv", index=False)
-    print(f"¡Prueba exitosa! Se guardaron {len(datos)} registros de la letra A en 'test_letra_a_norm_posicion_escala.csv'.")
+    df.to_csv("train_letra_A.csv", index=False)
+    print(f"¡Prueba exitosa! Se guardaron {len(datos)} registros de la letra A en 'test_letra_A.csv'.")
 else:
     print("No se detectaron manos en las imágenes de esta carpeta.")
