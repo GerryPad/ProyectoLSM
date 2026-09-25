@@ -6,7 +6,8 @@ import math
 # -------------------------------------------------
 # 1. RUTA ESPECÍFICA DE PRUEBA (Solo la A de train)
 # -------------------------------------------------
-ruta_carpeta_a = "dataset/MSL-ABC/lsm-abc-A/train/A"
+#ruta_carpeta_a = "dataset/MSL-ABC/lsm-abc-A/train/A"
+ruta_carpeta_a = "A_fotos"
 ruta_modelo = "hand_landmarker.task"
 
 BaseOptions = mp.tasks.BaseOptions
@@ -47,6 +48,10 @@ if os.path.exists(ruta_carpeta_a):
             
             if resultado.hand_landmarks:
                 mano = resultado.hand_landmarks[0]
+
+                #Determinar si es mano izquierda o derecha
+                tipo_mano = resultado.handedness[0][0].category_name #Devuelve left o right
+
                 fila_landmarks = []
                 landmarks_relativos = []
 
@@ -57,6 +62,10 @@ if os.path.exists(ruta_carpeta_a):
 
                 for punto in mano:
                     x_relativo = punto.x - x0
+
+                    if tipo_mano == "Left":
+                        x_relativo = -x_relativo
+
                     y_relativo = punto.y - y0
                     z_relativo = punto.z - z0
 
