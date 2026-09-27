@@ -6,7 +6,7 @@ import math
 import numpy as np
 
 # -------------------------------------------------
-# 1. CONFIGURACIÓN DE MEDIAPIPE (Modo IMAGE para evitar conflictos de timestamp)
+# 1. CONFIGURACIÓN DE RUTAS Y MEDIAPIPE
 # -------------------------------------------------
 carpeta_videos = "MSL-dynamic-signs/train" 
 ruta_modelo = "hand_landmarker.task"
@@ -16,13 +16,13 @@ HandLandmarker = mp.tasks.vision.HandLandmarker
 HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 RunningMode = mp.tasks.vision.RunningMode
 
-# Usamos RunningMode.IMAGE para procesar fotogramas de video individualmente sin depender del tiempo global
 opciones = HandLandmarkerOptions(
     base_options=BaseOptions(model_asset_path=ruta_modelo),
     running_mode=RunningMode.IMAGE,
     num_hands=1
 )
 
+# Definimos el número de fotogramas objetivo global (ej. 60)
 NUM_FOTOGRAMAS_OBJETIVO = 60
 datos_videos = []
 etiquetas = []
@@ -30,9 +30,11 @@ etiquetas = []
 print(f"Procesando videos de la carpeta: {carpeta_videos}")
 
 # -------------------------------------------------
-# 2. PROCESAMIENTO MASIVO DE VIDEOS CON CONTADOR
+# 2. PROCESAMIENTO MASIVO CON PADDING / ESTIRAMIENTO
 # -------------------------------------------------
 contador_videos = 0
+videos_procesados = 0
+videos_estirados = 0
 
 if os.path.exists(carpeta_videos):
     for archivo in os.listdir(carpeta_videos):
@@ -49,7 +51,7 @@ if os.path.exists(carpeta_videos):
             cap = cv2.VideoCapture(ruta_video)
             fotogramas_video = []
             
-            # Creamos un detector fresco para cada video para garantizar aislamiento total
+            # Creamos un detector independiente para cada video
             detector = HandLandmarker.create_from_options(opciones)
             
             while cap.isOpened():
@@ -60,7 +62,6 @@ if os.path.exists(carpeta_videos):
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 imagen_mp = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
                 
-                # Detección independiente por fotograma
                 resultado = detector.detect(imagen_mp)
                 
                 if resultado.hand_landmarks:
@@ -88,18 +89,41 @@ if os.path.exists(carpeta_videos):
                         fotogramas_video.append(vector_fotograma)
                         
             cap.release()
-            detector.close() # Cerramos el detector de este video liberando memoria
+            detector.close()
             
-            # Muestreo uniforme temporal
-            if len(fotogramas_video) >= NUM_FOTOGRAMAS_OBJETIVO:
-                indices = np.linspace(0, len(fotogramas_video) - 1, NUM_FOTOGRAMAS_OBJETIVO, dtype=int)
+            # Validamos que el video tenga al menos al menos un fotograma con mano
+            if len(fotogramas_video) > 0:
                 secuencia_uniforme = []
                 
-                for idx in indices:
-                    secuencia_uniforme.extend(fotogramas_video[idx])
+                # SI EL VIDEO ES MÁS CORTO QUE EL OBJETIVO: Lo estiramos (interpolamos)
+                if len(fotogramas_video) < NUM_FOTOGRAMAS_OBJETIVO:
+                    videos_estirados += 1
+                    indices = np.linspace(0, len(fotogramas_video) - 1, NUM_FOTOGRAMAS_OBJETIVO)
                     
+                    for idx in indices:
+                        idx_inf = int(np.floor(idx))
+                        idx_sup = int(np.ceil(idx))
+                        
+                        if idx_inf == idx_sup:
+                            secuencia_uniforme.extend(fotogramas_video[idx_inf])
+                        else:
+                            # Interpolación lineal entre el fotograma inferior y superior
+                            peso = idx - idx_inf
+                            frame_interpolado = [
+                                (1 - peso) * a + peso * b 
+                                for a, b in zip(fotogramas_video[idx_inf], fotogramas_video[idx_sup])
+                            ]
+                            secuencia_uniforme.extend(frame_interpolado)
+                
+                # SI EL VIDEO CUMPLE O SUPERA EL OBJETIVO: Aplicamos muestreo normal (downsampling)
+                else:
+                    indices = np.linspace(0, len(fotogramas_video) - 1, NUM_FOTOGRAMAS_OBJETIVO, dtype=int)
+                    for idx in indices:
+                        secuencia_uniforme.extend(fotogramas_video[idx])
+                
                 datos_videos.append(secuencia_uniforme)
                 etiquetas.append(letra)
+                videos_procesados += 1
             
             contador_videos += 1
             if contador_videos % 10 == 0:
@@ -121,6 +145,9 @@ if len(datos_videos) > 0:
     
     archivo_salida = "dataset_landmarks_dinamicos.csv"
     df_dinamico.to_csv(archivo_salida, index=False)
-    print(f"\n¡Proceso dinámico finalizado! Se guardaron {len(datos_videos)} videos en '{archivo_salida}'.")
+    print(f"\n¡Proceso dinámico finalizado!")
+    print(f"Total de videos guardados exitosamente: {videos_procesados}")
+    print(f"Videos cortos que fueron estirados automáticamente: {videos_estirados}")
+    print(f"Archivo generado: '{archivo_salida}'")
 else:
     print("No se pudieron procesar videos válidos. Revisa la ruta de la carpeta.")
