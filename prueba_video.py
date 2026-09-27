@@ -8,7 +8,6 @@ import numpy as np
 # -------------------------------------------------
 # 1. RUTA DE UN SOLO VIDEO DE PRUEBA
 # -------------------------------------------------
-# Cambia esta ruta por la de un archivo de video real que tengas en tu carpeta
 ruta_video_prueba = "MSL-dynamic-signs/train/S1-J-frontal-1.mp4" 
 ruta_modelo = "hand_landmarker.task"
 
@@ -25,8 +24,8 @@ opciones = HandLandmarkerOptions(
 
 detector = HandLandmarker.create_from_options(opciones)
 
-# Puedes cambiar este número de fotogramas objetivo para probar (ej. 60 u 80)
-NUM_FOTOGRAMAS_OBJETIVO = 60
+# Número de fotogramas objetivo (puedes cambiarlo a 60 u 80 para probar)
+NUM_FOTOGRAMAS_OBJETIVO = 100
 
 print(f"Procesando video individual: {ruta_video_prueba}")
 
@@ -71,21 +70,43 @@ else:
                 fotogramas_video.append(vector_fotograma)
                 
     cap.release()
-    print(f"Fotogramas totales con mano detectada en este video: {len(fotogramas_video)}")
+    print(f"Fotogramas con mano detectada en este video: {len(fotogramas_video)}")
 
 detector.close()
 
 # -------------------------------------------------
-# 2. APLICAR MUESTREO Y GUARDAR CSV DE PRUEBA
+# 2. APLICAR INTERPOLACIÓN O MUESTREO Y GUARDAR CSV
 # -------------------------------------------------
-if len(fotogramas_video) >= NUM_FOTOGRAMAS_OBJETIVO:
-    indices = np.linspace(0, len(fotogramas_video) - 1, NUM_FOTOGRAMAS_OBJETIVO, dtype=int)
+if len(fotogramas_video) > 0:
     secuencia_uniforme = []
     
-    for idx in indices:
-        secuencia_uniforme.extend(fotogramas_video[idx])
+    # CASO A: El video es más corto que el objetivo -> Lo estiramos suavemente (interpolación lineal)
+    if len(fotogramas_video) < NUM_FOTOGRAMAS_OBJETIVO:
+        print(f"-> El video es más corto que el objetivo. Aplicando estiramiento a {NUM_FOTOGRAMAS_OBJETIVO} fotogramas...")
+        indices = np.linspace(0, len(fotogramas_video) - 1, NUM_FOTOGRAMAS_OBJETIVO)
         
-    # Construir las columnas para el CSV (ej. f0_x0, f0_y0, f0_z0 ... hasta el fotograma objetivo)
+        for idx in indices:
+            idx_inf = int(np.floor(idx))
+            idx_sup = int(np.ceil(idx))
+            
+            if idx_inf == idx_sup:
+                secuencia_uniforme.extend(fotogramas_video[idx_inf])
+            else:
+                peso = idx - idx_inf
+                frame_interpolado = [
+                    (1 - peso) * a + peso * b 
+                    for a, b in zip(fotogramas_video[idx_inf], fotogramas_video[idx_sup])
+                ]
+                secuencia_uniforme.extend(frame_interpolado)
+                
+    # CASO B: El video cumple o supera el objetivo -> Muestreo normal (downsampling)
+    else:
+        print(f"-> El video cumple/supera el objetivo. Muestreando uniformemente a {NUM_FOTOGRAMAS_OBJETIVO} fotogramas...")
+        indices = np.linspace(0, len(fotogramas_video) - 1, NUM_FOTOGRAMAS_OBJETIVO, dtype=int)
+        for idx in indices:
+            secuencia_uniforme.extend(fotogramas_video[idx])
+            
+    # Construir las columnas para el CSV
     columnas = []
     for f in range(NUM_FOTOGRAMAS_OBJETIVO):
         for i in range(21):
@@ -93,14 +114,13 @@ if len(fotogramas_video) >= NUM_FOTOGRAMAS_OBJETIVO:
             
     df_prueba = pd.DataFrame([secuencia_uniforme], columns=columnas)
     
-    # Extraer letra del nombre del archivo de prueba
     nombre_archivo = os.path.basename(ruta_video_prueba)
     letra = nombre_archivo.split('-')[1].upper() if '-' in nombre_archivo else 'DESCONOCIDA'
     df_prueba['etiqueta'] = letra
     
     archivo_salida = "test_video_dinamico.csv"
     df_prueba.to_csv(archivo_salida, index=False)
-    print(f"¡Prueba unitaria exitosa! Se guardó la secuencia de la letra '{letra}' en '{archivo_salida}'.")
+    print(f"\n¡Prueba unitaria exitosa! Se guardó la secuencia de la letra '{letra}' en '{archivo_salida}'.")
     print(f"Dimensiones del DataFrame resultante: {df_prueba.shape}")
 else:
-    print(f"El video tiene menos fotogramas detectados ({len(fotogramas_video)}) que el objetivo ({NUM_FOTOGRAMAS_OBJETIVO}).")
+    print("No se detectó ninguna mano en los fotogramas de este video de prueba.")
