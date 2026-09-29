@@ -1,0 +1,14 @@
+# Entorno virtual
+mi_entorno/
+.venv/
+venv/
+
+# Dataset pesado
+dataset/
+
+# Modelos entrenados
+*.pkl
+
+# Caché de Python
+__pycache__/
+*.pyc
