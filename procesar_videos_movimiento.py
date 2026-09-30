@@ -10,8 +10,8 @@ import numpy as np
 # -------------------------------------------------
 
 carpeta_videos = (
-    "dataset/MSL-dynamic-signs-frontal-view/"
-    "MSL-dynamic-signs/train"
+    "dataset/MSL-dynamic-signs-profile/"
+    "MSL dynamic-profile-signs/Z"
 )
 
 ruta_modelo = "hand_landmarker.task"
@@ -364,7 +364,7 @@ if len(datos_videos) > 0:
     # -------------------------------------------------
 
     archivo_salida = (
-        "dataset_landmarks_dinamicos_movimiento.csv"
+        "dataset_landmarks_dinamicos_Z.csv"
     )
 
     df_dinamico.to_csv(
