@@ -3,8 +3,9 @@ import mediapipe as mp
 import joblib
 import math
 import numpy as np
-import time
-from collections import deque, Counter
+import pandas as pd
+from collections import deque
+
 
 # -------------------------------------------------
 # 1. CONFIGURACIÓN
@@ -15,27 +16,40 @@ ruta_modelo = "hand_landmarker.task"
 
 NUM_FOTOGRAMAS_OBJETIVO = 75
 
-# Cantidad máxima de frames crudos que conservamos.
-# A ~30 FPS, 60 frames son aproximadamente 2 segundos.
-TAM_BUFFER = 60
 
-# No intentamos reconocer hasta tener al menos estos frames.
-MIN_FRAMES = 25
+# -------------------------------------------------
+# PARÁMETROS PARA DETECTAR INICIO Y FIN
+# -------------------------------------------------
 
-# Cada cuántos frames hacemos una predicción.
-# No hace falta ejecutar Random Forest en absolutamente cada frame.
-INTERVALO_PREDICCION = 5
+# Comparamos la muñeca actual con la de hace
+# algunos frames para saber si REALMENTE se mueve.
+FRAMES_COMPARACION = 5
 
-# Umbral inicial de movimiento.
-# ESTE VALOR ES DE PRUEBA. Hay que ajustarlo viendo la cámara.
-UMBRAL_MOVIMIENTO = 0.04
+# Umbral provisional para considerar movimiento.
+# Después lo ajustaremos con tus pruebas.
+UMBRAL_INICIO = 0.025
 
-# Para aceptar una letra pedimos varias predicciones recientes.
-NUM_PREDICCIONES_ESTABLES = 4
+# Para detectar que terminó la seña usamos un
+# umbral menor.
+UMBRAL_FIN = 0.012
 
-# Número de predicciones que conservamos para votar.
-TAM_HISTORIAL_PREDICCIONES = 5
+# No basta un único frame con movimiento.
+# Pedimos varios consecutivos para iniciar.
+FRAMES_PARA_INICIAR = 3
 
+# Pedimos varios frames quietos para terminar.
+FRAMES_PARA_TERMINAR = 8
+
+# Evita procesar secuencias demasiado pequeñas.
+MIN_FRAMES_SENA = 12
+
+# Evita quedarse capturando indefinidamente.
+MAX_FRAMES_SENA = 120
+
+
+# -------------------------------------------------
+# 2. MEDIAPIPE
+# -------------------------------------------------
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
@@ -44,57 +58,113 @@ RunningMode = mp.tasks.vision.RunningMode
 
 
 opciones = HandLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path=ruta_modelo),
+    base_options=BaseOptions(
+        model_asset_path=ruta_modelo
+    ),
     running_mode=RunningMode.VIDEO,
     num_hands=1
 )
 
-detector = HandLandmarker.create_from_options(opciones)
+detector = HandLandmarker.create_from_options(
+    opciones
+)
 
 
 # -------------------------------------------------
-# 2. CÁMARA
+# 3. CÁMARA
 # -------------------------------------------------
 
 cap = cv2.VideoCapture(0)
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+cap.set(
+    cv2.CAP_PROP_FRAME_WIDTH,
+    640
+)
+
+cap.set(
+    cv2.CAP_PROP_FRAME_HEIGHT,
+    480
+)
+
 
 if not cap.isOpened():
+
     print("No se pudo abrir la cámara.")
     exit()
 
-print("Reconocimiento dinámico automático iniciado.")
-print("Ya NO necesitas presionar ESPACIO.")
-print("Presiona ESC para salir.")
+
+print(
+    "Reconocimiento dinámico automático iniciado."
+)
+
+print(
+    "Mueve la mano para realizar una seña."
+)
+
+print(
+    "Presiona ESC para salir."
+)
 
 
 # -------------------------------------------------
-# 3. VARIABLES DEL RECONOCIMIENTO
+# 4. VARIABLES DE ESTADO
 # -------------------------------------------------
 
 timestamp = 0
 
-# Buffer continuo.
-# Guardaremos landmarks y datos necesarios de los últimos frames.
-buffer_frames = deque(maxlen=TAM_BUFFER)
 
-# Historial de predicciones para estabilización.
-historial_predicciones = deque(
-    maxlen=TAM_HISTORIAL_PREDICCIONES
-)
+# Estados posibles:
+#
+# ESPERANDO
+# CAPTURANDO
 
-letra_predicha = "Esperando..."
-color_texto = (0, 0, 255)
-
-contador_frames = 0
-
-movimiento_actual = 0.0
+estado = "ESPERANDO"
 
 
 # -------------------------------------------------
-# 4. FUNCIÓN PARA CONVERTIR LA VENTANA A 75 FRAMES
+# Historial corto de muñecas.
+#
+# Solo sirve para determinar si actualmente
+# hay movimiento.
+# -------------------------------------------------
+
+historial_munecas = deque(
+    maxlen=FRAMES_COMPARACION + 1
+)
+
+
+# -------------------------------------------------
+# Frames que pertenecen a la seña actual
+# -------------------------------------------------
+
+secuencia_actual = []
+
+
+# -------------------------------------------------
+# Contadores
+# -------------------------------------------------
+
+frames_movimiento = 0
+frames_quietos = 0
+
+
+# -------------------------------------------------
+# Información mostrada
+# -------------------------------------------------
+
+movimiento_actual = 0.0
+
+letra_predicha = "Esperando..."
+
+color_texto = (
+    0,
+    0,
+    255
+)
+
+
+# -------------------------------------------------
+# 5. FUNCIÓN PARA CONVERTIR A 75 FRAMES
 # -------------------------------------------------
 
 def convertir_a_75_frames(fotogramas):
@@ -102,13 +172,18 @@ def convertir_a_75_frames(fotogramas):
     if len(fotogramas) == 0:
         return None
 
+
     secuencia_uniforme = []
 
+
     # ---------------------------------------------
-    # MENOS DE 75 FRAMES -> INTERPOLACIÓN
+    # MENOS DE 75 -> INTERPOLAR
     # ---------------------------------------------
 
-    if len(fotogramas) < NUM_FOTOGRAMAS_OBJETIVO:
+    if (
+        len(fotogramas)
+        < NUM_FOTOGRAMAS_OBJETIVO
+    ):
 
         indices = np.linspace(
             0,
@@ -116,10 +191,17 @@ def convertir_a_75_frames(fotogramas):
             NUM_FOTOGRAMAS_OBJETIVO
         )
 
+
         for idx in indices:
 
-            idx_inf = int(np.floor(idx))
-            idx_sup = int(np.ceil(idx))
+            idx_inf = int(
+                np.floor(idx)
+            )
+
+            idx_sup = int(
+                np.ceil(idx)
+            )
+
 
             if idx_inf == idx_sup:
 
@@ -132,19 +214,24 @@ def convertir_a_75_frames(fotogramas):
                 peso = idx - idx_inf
 
                 frame_interpolado = [
-                    (1 - peso) * a + peso * b
+
+                    (1 - peso) * a
+                    + peso * b
+
                     for a, b in zip(
                         fotogramas[idx_inf],
                         fotogramas[idx_sup]
                     )
+
                 ]
 
                 secuencia_uniforme.extend(
                     frame_interpolado
                 )
 
+
     # ---------------------------------------------
-    # 75 O MÁS -> MUESTREO
+    # 75 O MÁS -> MUESTREAR
     # ---------------------------------------------
 
     else:
@@ -156,61 +243,346 @@ def convertir_a_75_frames(fotogramas):
             dtype=int
         )
 
+
         for idx in indices:
 
             secuencia_uniforme.extend(
                 fotogramas[idx]
             )
 
+
     return secuencia_uniforme
 
 
 # -------------------------------------------------
-# 5. BUCLE PRINCIPAL
+# 6. FUNCIÓN PARA PROCESAR UNA SEÑA COMPLETA
+# -------------------------------------------------
+
+def procesar_sena(secuencia):
+
+    if len(secuencia) < MIN_FRAMES_SENA:
+
+        print(
+            "Secuencia demasiado corta. Ignorada."
+        )
+
+        return None
+
+
+    print(
+        "\nProcesando seña de",
+        len(secuencia),
+        "frames..."
+    )
+
+
+    # -------------------------------------------------
+    # MUÑECA INICIAL
+    # -------------------------------------------------
+    #
+    # Igual que durante el entrenamiento:
+    # el primer frame será nuestro origen.
+    # -------------------------------------------------
+
+    primer_frame = secuencia[0]
+
+    xi, yi, zi = (
+        primer_frame["landmarks"][0]
+    )
+
+
+    fotogramas_procesados = []
+
+
+    # -------------------------------------------------
+    # PROCESAR CADA FRAME
+    # -------------------------------------------------
+
+    for datos_frame in secuencia:
+
+        landmarks = (
+            datos_frame["landmarks"]
+        )
+
+        tipo_mano = (
+            datos_frame["tipo_mano"]
+        )
+
+
+        # Muñeca actual
+        x0, y0, z0 = landmarks[0]
+
+
+        # -------------------------------------------------
+        # TRAYECTORIA DE LA MUÑECA
+        # -------------------------------------------------
+
+        dx = x0 - xi
+        dy = y0 - yi
+        dz = z0 - zi
+
+
+        if tipo_mano == "Left":
+
+            dx = -dx
+
+
+        # -------------------------------------------------
+        # LANDMARKS RELATIVOS A LA MUÑECA ACTUAL
+        # -------------------------------------------------
+
+        landmarks_relativos = []
+
+
+        for x, y, z in landmarks:
+
+            x_rel = x - x0
+
+            if tipo_mano == "Left":
+
+                x_rel = -x_rel
+
+
+            y_rel = y - y0
+            z_rel = z - z0
+
+
+            landmarks_relativos.append(
+                [
+                    x_rel,
+                    y_rel,
+                    z_rel
+                ]
+            )
+
+
+        # -------------------------------------------------
+        # NORMALIZACIÓN
+        # -------------------------------------------------
+
+        dist_max = max(
+
+            math.sqrt(
+                x**2
+                + y**2
+                + z**2
+            )
+
+            for x, y, z
+            in landmarks_relativos
+        )
+
+
+        if dist_max > 0:
+
+            vector_fotograma = []
+
+
+            # ---------------------------------------------
+            # 63 CARACTERÍSTICAS DE FORMA
+            # ---------------------------------------------
+
+            for x, y, z in landmarks_relativos:
+
+                vector_fotograma.extend([
+                    x / dist_max,
+                    y / dist_max,
+                    z / dist_max
+                ])
+
+
+            # ---------------------------------------------
+            # 3 CARACTERÍSTICAS DE MOVIMIENTO
+            # ---------------------------------------------
+
+            vector_fotograma.extend([
+                dx,
+                dy,
+                dz
+            ])
+
+
+            # Total = 66
+            fotogramas_procesados.append(
+                vector_fotograma
+            )
+
+
+    # -------------------------------------------------
+    # CONVERTIR A 75 FRAMES
+    # -------------------------------------------------
+
+    secuencia_uniforme = (
+        convertir_a_75_frames(
+            fotogramas_procesados
+        )
+    )
+
+
+    if secuencia_uniforme is None:
+
+        return None
+
+
+    print(
+        "Características:",
+        len(secuencia_uniforme)
+    )
+
+
+    # -------------------------------------------------
+    # VERIFICACIÓN
+    # -------------------------------------------------
+
+    if len(secuencia_uniforme) != 4950:
+
+        print(
+            "Error: se esperaban 4950 características."
+        )
+
+        return None
+
+
+    # -------------------------------------------------
+    # PREDICCIÓN
+    # -------------------------------------------------
+    #
+    # Creamos DataFrame usando los mismos nombres
+    # del entrenamiento para evitar el warning:
+    #
+    # "X does not have valid feature names"
+    # -------------------------------------------------
+
+    if hasattr(
+        modelo,
+        "feature_names_in_"
+    ):
+
+        entrada = pd.DataFrame(
+            [secuencia_uniforme],
+            columns=modelo.feature_names_in_
+        )
+
+    else:
+
+        entrada = [
+            secuencia_uniforme
+        ]
+
+
+    prediccion = modelo.predict(
+        entrada
+    )[0]
+
+
+    # -------------------------------------------------
+    # CONFIANZA
+    # -------------------------------------------------
+
+    confianza = None
+
+
+    if hasattr(
+        modelo,
+        "predict_proba"
+    ):
+
+        probabilidades = (
+            modelo.predict_proba(
+                entrada
+            )[0]
+        )
+
+        confianza = float(
+            np.max(probabilidades)
+        )
+
+
+    return (
+        prediccion,
+        confianza
+    )
+
+
+# -------------------------------------------------
+# 7. BUCLE PRINCIPAL
 # -------------------------------------------------
 
 while cap.isOpened():
 
     ret, frame = cap.read()
 
+
     if not ret:
+
         break
 
-    frame = cv2.flip(frame, 1)
 
-    alto, ancho, _ = frame.shape
+    # -------------------------------------------------
+    # ESPEJO
+    # -------------------------------------------------
+
+    frame = cv2.flip(
+        frame,
+        1
+    )
+
+
+    alto, ancho, _ = (
+        frame.shape
+    )
+
+
+    # -------------------------------------------------
+    # CONVERTIR PARA MEDIAPIPE
+    # -------------------------------------------------
 
     frame_rgb = cv2.cvtColor(
         frame,
         cv2.COLOR_BGR2RGB
     )
 
+
     imagen_mp = mp.Image(
         image_format=mp.ImageFormat.SRGB,
         data=frame_rgb
     )
 
-    timestamp += int(1000 / 30)
 
-    resultado = detector.detect_for_video(
-        imagen_mp,
-        timestamp
+    timestamp += int(
+        1000 / 30
     )
 
-    contador_frames += 1
+
+    resultado = (
+        detector.detect_for_video(
+            imagen_mp,
+            timestamp
+        )
+    )
 
 
     # -------------------------------------------------
-    # 6. DETECTAR MANO
+    # 8. MANO DETECTADA
     # -------------------------------------------------
 
     if resultado.hand_landmarks:
 
-        mano = resultado.hand_landmarks[0]
+        mano = (
+            resultado.hand_landmarks[0]
+        )
+
 
         tipo_mano = (
-            resultado.handedness[0][0].category_name
+            resultado
+            .handedness[0][0]
+            .category_name
         )
+
+
+        # -------------------------------------------------
+        # MUÑECA ACTUAL
+        # -------------------------------------------------
 
         muneca = mano[0]
 
@@ -220,57 +592,42 @@ while cap.isOpened():
 
 
         # -------------------------------------------------
-        # GUARDAR LOS LANDMARKS CRUDOS EN EL BUFFER
-        # -------------------------------------------------
-        #
-        # IMPORTANTE:
-        # Todavía NO calculamos dx/dy/dz.
-        #
-        # Los calcularemos tomando como referencia
-        # el primer frame de la ventana.
-        #
-        # Así imitamos el entrenamiento.
+        # GUARDAR MUÑECA EN HISTORIAL CORTO
         # -------------------------------------------------
 
-        landmarks_actuales = []
+        historial_munecas.append(
+            (
+                x0,
+                y0,
+                z0
+            )
+        )
 
-        for punto in mano:
 
-            landmarks_actuales.append(
-                (punto.x, punto.y, punto.z)
+        # -------------------------------------------------
+        # CALCULAR MOVIMIENTO RECIENTE
+        # -------------------------------------------------
+
+        if (
+            len(historial_munecas)
+            == FRAMES_COMPARACION + 1
+        ):
+
+            xa, ya, za = (
+                historial_munecas[0]
             )
 
-        buffer_frames.append({
-            "landmarks": landmarks_actuales,
-            "tipo_mano": tipo_mano
-        })
+            xb, yb, zb = (
+                historial_munecas[-1]
+            )
 
 
-        # -------------------------------------------------
-        # 7. CALCULAR MOVIMIENTO DE LA VENTANA
-        # -------------------------------------------------
-
-        if len(buffer_frames) >= 2:
-
-            primer_frame = buffer_frames[0]
-            ultimo_frame = buffer_frames[-1]
-
-            muneca_inicio = primer_frame["landmarks"][0]
-            muneca_fin = ultimo_frame["landmarks"][0]
-
-            xi, yi, zi = muneca_inicio
-            xf, yf, zf = muneca_fin
-
-            dx_mov = xf - xi
-            dy_mov = yf - yi
-            dz_mov = zf - zi
-
-            # Para el umbral solamente nos interesa
-            # cuánto se desplazó la muñeca.
-            movimiento_actual = math.sqrt(
-                dx_mov**2 +
-                dy_mov**2 +
-                dz_mov**2
+            movimiento_actual = (
+                math.sqrt(
+                    (xb - xa)**2
+                    + (yb - ya)**2
+                    + (zb - za)**2
+                )
             )
 
         else:
@@ -279,197 +636,296 @@ while cap.isOpened():
 
 
         # -------------------------------------------------
-        # 8. ¿HAY SUFICIENTE MOVIMIENTO?
+        # PREPARAR DATOS CRUDOS DEL FRAME
         # -------------------------------------------------
 
-        hay_movimiento = (
-            len(buffer_frames) >= MIN_FRAMES
-            and movimiento_actual >= UMBRAL_MOVIMIENTO
-        )
+        landmarks_actuales = []
 
 
-        # -------------------------------------------------
-        # 9. HACER PREDICCIÓN
-        # -------------------------------------------------
+        for punto in mano:
 
-        if (
-            hay_movimiento
-            and contador_frames % INTERVALO_PREDICCION == 0
-        ):
-
-            # ---------------------------------------------
-            # La muñeca del PRIMER FRAME es nuestro origen.
-            # ---------------------------------------------
-
-            primer_frame = buffer_frames[0]
-
-            xi, yi, zi = (
-                primer_frame["landmarks"][0]
-            )
-
-            fotogramas_secuencia = []
-
-
-            # ---------------------------------------------
-            # PROCESAR TODOS LOS FRAMES DE LA VENTANA
-            # ---------------------------------------------
-
-            for datos_frame in buffer_frames:
-
-                landmarks = datos_frame["landmarks"]
-                tipo = datos_frame["tipo_mano"]
-
-                x0, y0, z0 = landmarks[0]
-
-
-                # -----------------------------------------
-                # MOVIMIENTO DE MUÑECA
-                # -----------------------------------------
-
-                dx = x0 - xi
-                dy = y0 - yi
-                dz = z0 - zi
-
-                if tipo == "Left":
-                    dx = -dx
-
-
-                # -----------------------------------------
-                # LANDMARKS RELATIVOS A MUÑECA ACTUAL
-                # -----------------------------------------
-
-                landmarks_relativos = []
-
-                for x, y, z in landmarks:
-
-                    x_rel = x - x0
-
-                    if tipo == "Left":
-                        x_rel = -x_rel
-
-                    y_rel = y - y0
-                    z_rel = z - z0
-
-                    landmarks_relativos.append(
-                        [x_rel, y_rel, z_rel]
-                    )
-
-
-                # -----------------------------------------
-                # NORMALIZACIÓN DE ESCALA
-                # -----------------------------------------
-
-                dist_max = max(
-                    math.sqrt(
-                        x**2 +
-                        y**2 +
-                        z**2
-                    )
-                    for x, y, z
-                    in landmarks_relativos
+            landmarks_actuales.append(
+                (
+                    punto.x,
+                    punto.y,
+                    punto.z
                 )
-
-
-                if dist_max > 0:
-
-                    vector_fotograma = []
-
-                    # 63 características de forma
-                    for x, y, z in landmarks_relativos:
-
-                        vector_fotograma.extend([
-                            x / dist_max,
-                            y / dist_max,
-                            z / dist_max
-                        ])
-
-                    # 3 características de movimiento
-                    vector_fotograma.extend([
-                        dx,
-                        dy,
-                        dz
-                    ])
-
-                    # 66 características
-                    fotogramas_secuencia.append(
-                        vector_fotograma
-                    )
-
-
-            # -------------------------------------------------
-            # 10. CONVERTIR LA VENTANA A 75 FRAMES
-            # -------------------------------------------------
-
-            secuencia_uniforme = convertir_a_75_frames(
-                fotogramas_secuencia
             )
 
 
-            # -------------------------------------------------
-            # 11. PREDICCIÓN
-            # -------------------------------------------------
+        datos_actuales = {
+
+            "landmarks":
+                landmarks_actuales,
+
+            "tipo_mano":
+                tipo_mano
+
+        }
+
+
+        # =================================================
+        # 9. ESTADO: ESPERANDO
+        # =================================================
+
+        if estado == "ESPERANDO":
+
+            # ---------------------------------------------
+            # ¿HAY MOVIMIENTO REAL?
+            # ---------------------------------------------
 
             if (
-                secuencia_uniforme is not None
-                and len(secuencia_uniforme) == 4950
+                movimiento_actual
+                >= UMBRAL_INICIO
             ):
 
-                prediccion = modelo.predict(
-                    [secuencia_uniforme]
-                )[0]
+                frames_movimiento += 1
 
-                historial_predicciones.append(
-                    prediccion
-                )
+            else:
+
+                frames_movimiento = 0
+
+
+            # ---------------------------------------------
+            # VARIOS FRAMES CON MOVIMIENTO
+            # -> INICIA SEÑA
+            # ---------------------------------------------
+
+            if (
+                frames_movimiento
+                >= FRAMES_PARA_INICIAR
+            ):
 
                 print(
-                    "Movimiento:",
-                    round(movimiento_actual, 4),
-                    "| Predicción candidata:",
-                    prediccion
+                    "\n>>> INICIO DE SEÑA"
                 )
 
 
-                # -------------------------------------------------
-                # 12. ESTABILIZACIÓN
-                # -------------------------------------------------
+                estado = "CAPTURANDO"
 
-                conteo = Counter(
-                    historial_predicciones
+                secuencia_actual = []
+
+                frames_quietos = 0
+
+                frames_movimiento = 0
+
+
+                # -----------------------------------------
+                # IMPORTANTE
+                #
+                # Guardamos también algunos frames
+                # anteriores al instante exacto en que
+                # detectamos el inicio.
+                # -----------------------------------------
+
+                secuencia_actual.append(
+                    datos_actuales
                 )
 
-                letra_mas_comun, repeticiones = (
-                    conteo.most_common(1)[0]
+
+                letra_predicha = (
+                    "Capturando..."
                 )
 
-                if (
-                    repeticiones
-                    >= NUM_PREDICCIONES_ESTABLES
-                ):
+                color_texto = (
+                    0,
+                    255,
+                    255
+                )
 
-                    letra_predicha = letra_mas_comun
-                    color_texto = (0, 255, 0)
+
+        # =================================================
+        # 10. ESTADO: CAPTURANDO
+        # =================================================
+
+        elif estado == "CAPTURANDO":
+
+            # ---------------------------------------------
+            # GUARDAMOS TODOS LOS FRAMES
+            # ---------------------------------------------
+
+            secuencia_actual.append(
+                datos_actuales
+            )
+
+
+            # ---------------------------------------------
+            # ¿LA MANO ESTÁ QUIETA?
+            # ---------------------------------------------
+
+            if (
+                movimiento_actual
+                <= UMBRAL_FIN
+            ):
+
+                frames_quietos += 1
+
+            else:
+
+                frames_quietos = 0
+
+
+            # ---------------------------------------------
+            # TERMINAR POR QUIETUD
+            # ---------------------------------------------
+
+            terminar_por_quietud = (
+
+                frames_quietos
+                >= FRAMES_PARA_TERMINAR
+
+                and
+
+                len(secuencia_actual)
+                >= MIN_FRAMES_SENA
+
+            )
+
+
+            # ---------------------------------------------
+            # TERMINAR POR SEGURIDAD
+            # ---------------------------------------------
+
+            terminar_por_maximo = (
+
+                len(secuencia_actual)
+                >= MAX_FRAMES_SENA
+
+            )
+
+
+            # ---------------------------------------------
+            # FIN DE SEÑA
+            # ---------------------------------------------
+
+            if (
+                terminar_por_quietud
+                or terminar_por_maximo
+            ):
+
+                print(
+                    "<<< FIN DE SEÑA"
+                )
+
+
+                # -----------------------------------------
+                # Eliminamos algunos frames quietos
+                # del final.
+                # -----------------------------------------
+
+                if terminar_por_quietud:
+
+                    frames_a_quitar = (
+                        FRAMES_PARA_TERMINAR
+                        - 1
+                    )
+
+
+                    if (
+                        len(secuencia_actual)
+                        > frames_a_quitar
+                    ):
+
+                        secuencia_para_procesar = (
+                            secuencia_actual[
+                                :-frames_a_quitar
+                            ]
+                        )
+
+                    else:
+
+                        secuencia_para_procesar = (
+                            secuencia_actual.copy()
+                        )
 
                 else:
 
-                    letra_predicha = "Analizando..."
-                    color_texto = (0, 255, 255)
+                    secuencia_para_procesar = (
+                        secuencia_actual.copy()
+                    )
+
+
+                # -----------------------------------------
+                # CLASIFICAR
+                # -----------------------------------------
+
+                resultado_prediccion = (
+                    procesar_sena(
+                        secuencia_para_procesar
+                    )
+                )
+
+
+                if (
+                    resultado_prediccion
+                    is not None
+                ):
+
+                    letra, confianza = (
+                        resultado_prediccion
+                    )
+
+
+                    letra_predicha = letra
+
+                    color_texto = (
+                        0,
+                        255,
+                        0
+                    )
+
+
+                    if confianza is not None:
+
+                        print(
+                            "Letra detectada:",
+                            letra,
+                            "| Confianza:",
+                            round(
+                                confianza * 100,
+                                2
+                            ),
+                            "%"
+                        )
+
+                    else:
+
+                        print(
+                            "Letra detectada:",
+                            letra
+                        )
+
+
+                else:
+
+                    letra_predicha = (
+                        "No reconocida"
+                    )
+
+                    color_texto = (
+                        0,
+                        0,
+                        255
+                    )
+
+
+                # -----------------------------------------
+                # REINICIAR PARA LA SIGUIENTE SEÑA
+                # -----------------------------------------
+
+                estado = "ESPERANDO"
+
+                secuencia_actual = []
+
+                historial_munecas.clear()
+
+                frames_quietos = 0
+
+                frames_movimiento = 0
 
 
         # -------------------------------------------------
-        # SIN MOVIMIENTO
-        # -------------------------------------------------
-
-        elif not hay_movimiento:
-
-            historial_predicciones.clear()
-
-            letra_predicha = "Esperando movimiento..."
-            color_texto = (0, 0, 255)
-
-
-        # -------------------------------------------------
-        # DIBUJAR LANDMARKS
+        # 11. DIBUJAR LANDMARKS
         # -------------------------------------------------
 
         for punto in mano:
@@ -482,9 +938,13 @@ while cap.isOpened():
                 punto.y * alto
             )
 
+
             cv2.circle(
                 frame,
-                (x_pixel, y_pixel),
+                (
+                    x_pixel,
+                    y_pixel
+                ),
                 4,
                 (255, 0, 0),
                 -1
@@ -492,65 +952,84 @@ while cap.isOpened():
 
 
     # -------------------------------------------------
-    # 13. NO SE DETECTÓ MANO
+    # 12. NO HAY MANO
     # -------------------------------------------------
 
     else:
 
-        buffer_frames.clear()
-        historial_predicciones.clear()
+        historial_munecas.clear()
 
         movimiento_actual = 0.0
 
-        letra_predicha = "Sin mano"
-        color_texto = (0, 0, 255)
+
+        # Si todavía no estábamos capturando,
+        # simplemente seguimos esperando.
+
+        if estado == "ESPERANDO":
+
+            frames_movimiento = 0
 
 
     # -------------------------------------------------
-    # 14. INTERFAZ
+    # 13. INTERFAZ
     # -------------------------------------------------
 
     cv2.rectangle(
         frame,
         (20, 20),
-        (550, 135),
+        (600, 175),
         (50, 50, 50),
         -1
     )
 
+
     cv2.putText(
         frame,
         f"Letra: {letra_predicha}",
-        (35, 65),
+        (35, 60),
         cv2.FONT_HERSHEY_SIMPLEX,
         1,
         color_texto,
         2
     )
 
+
     cv2.putText(
         frame,
-        f"Movimiento: {movimiento_actual:.4f}",
-        (35, 100),
+        f"Estado: {estado}",
+        (35, 95),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.7,
         (255, 255, 255),
         2
     )
 
+
     cv2.putText(
         frame,
-        f"Buffer: {len(buffer_frames)}/{TAM_BUFFER}",
+        f"Movimiento reciente: {movimiento_actual:.4f}",
         (35, 125),
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.6,
+        0.65,
         (255, 255, 255),
         2
     )
 
+
     cv2.putText(
         frame,
-        "Reconocimiento automatico | ESC = salir",
+        f"Frames sena: {len(secuencia_actual)}",
+        (35, 155),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.65,
+        (255, 255, 255),
+        2
+    )
+
+
+    cv2.putText(
+        frame,
+        "Automatico | ESC = salir",
         (20, alto - 20),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.6,
@@ -558,28 +1037,38 @@ while cap.isOpened():
         2
     )
 
+
     cv2.imshow(
-        "Reconocimiento LSM Dinamico",
+        "Reconocimiento LSM Dinamico Automatico",
         frame
     )
 
 
     # -------------------------------------------------
-    # 15. TECLADO
+    # 14. TECLADO
     # -------------------------------------------------
 
-    tecla = cv2.waitKey(1) & 0xFF
+    tecla = (
+        cv2.waitKey(1)
+        & 0xFF
+    )
+
 
     if tecla == 27:
+
         break
 
 
 # -------------------------------------------------
-# 16. CERRAR
+# 15. CERRAR
 # -------------------------------------------------
 
 cap.release()
+
 cv2.destroyAllWindows()
+
 detector.close()
 
-print("Programa finalizado.")
+print(
+    "Programa finalizado."
+)
