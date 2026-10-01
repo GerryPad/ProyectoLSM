@@ -3,6 +3,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
 import joblib
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 # -------------------------------------------------
 # 1. CARGAR EL DATASET MAESTRO COMBINADO
@@ -50,6 +52,31 @@ print(f"\nPrecisión global del modelo: {precision_global * 100:.2f}%\n")
 # Reporte detallado por letra (precisión, recall, f1-score para cada seña)
 print("Reporte de clasificación detallado por letra:")
 print(classification_report(y_test, y_pred))
+
+# -------------------------------------------------
+# NUEVO: GENERAR Y GUARDAR LA MATRIZ DE CONFUSIÓN
+# -------------------------------------------------
+print("\nGenerando matriz de confusión...")
+
+# Calcular la matriz
+matriz_conf = confusion_matrix(y_test, y_pred, labels=modelo.classes_)
+
+# Configurar la visualización gráfica
+fig, ax = plt.subplots(figsize=(8, 8))
+disp = ConfusionMatrixDisplay(confusion_matrix=matriz_conf, display_labels=modelo.classes_)
+
+# Dibujar la matriz con colores legibles
+disp.plot(cmap=plt.cm.Blues, ax=ax, xticks_rotation='vertical', colorbar=True)
+plt.title("Matriz de Confusión - Señas Dinámicas LSM")
+plt.tight_layout()
+
+# Guardar la imagen en tu carpeta de proyecto para el reporte
+nombre_imagen_matriz = "matriz_confusion_lsm_estaticas.png"
+plt.savefig(nombre_imagen_matriz, dpi=300)
+print(f"¡Matriz de confusión guardada como '{nombre_imagen_matriz}'!")
+
+# Mostrar la ventana gráfica opcionalmente
+plt.show()
 
 # -------------------------------------------------
 # 5. GUARDAR EL MODELO ENTRENADO
