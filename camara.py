@@ -39,6 +39,7 @@ detector = HandLandmarker.create_from_options(opciones)
 # 2. CÁMARA E INTERFAZ
 # -------------------------------------------------
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
