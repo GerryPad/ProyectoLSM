@@ -15,7 +15,7 @@ ARCHIVO_RESUMEN = "resumen_evaluacion.csv"
 NUM_FOTOGRAMAS_OBJETIVO = 75
 
 EXTENSIONES_IMAGEN = (".jpg", ".jpeg", ".png")
-EXTENSIONES_VIDEO = (".mp4", ".avi", ".mov", ".mkv")
+EXTENSIONES_VIDEO = (".mp4", ".avi", ".mov", ".mkv", ".webm")
 
 
 #cargamos los modelos
