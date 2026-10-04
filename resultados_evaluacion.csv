@@ -1,0 +1,325 @@
+﻿archivo,tipo,etiqueta_real,etiqueta_predicha,resultado,estado
+Photo from 2026-10-01 17-24-47.467399.jpeg,Estatica,A,A,Correcta,OK
+Photo from 2026-10-01 17-24-55.102913.jpeg,Estatica,A,A,Correcta,OK
+Photo from 2026-10-01 17-25-02.252588.jpeg,Estatica,A,T,Incorrecta,OK
+Photo from 2026-10-01 17-25-14.221013.jpeg,Estatica,A,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-25-26.810036.jpeg,Estatica,A,A,Correcta,OK
+Photo from 2026-10-01 17-25-38.771785.jpeg,Estatica,A,A,Correcta,OK
+Photo from 2026-10-02 00-28-53.425420.jpeg,Estatica,A,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-29-03.287590.jpeg,Estatica,A,S,Incorrecta,OK
+Photo from 2026-10-02 00-29-12.249541.jpeg,Estatica,A,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-45-53.798306.jpeg,Estatica,A,A,Correcta,OK
+Photo from 2026-10-02 00-45-57.838183.jpeg,Estatica,A,A,Correcta,OK
+Photo from 2026-10-02 00-46-34.694146.jpeg,Estatica,A,A,Correcta,OK
+Photo from 2026-10-01 17-26-05.578281.jpeg,Estatica,B,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-26-11.107074.jpeg,Estatica,B,B,Correcta,OK
+Photo from 2026-10-01 17-26-19.086217.jpeg,Estatica,B,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-26-28.036549.jpeg,Estatica,B,B,Correcta,OK
+Photo from 2026-10-01 17-26-55.342833.jpeg,Estatica,B,B,Correcta,OK
+Photo from 2026-10-01 17-27-24.098497.jpeg,Estatica,B,B,Correcta,OK
+Photo from 2026-10-02 00-29-32.391971.jpeg,Estatica,B,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-30-39.651671.jpeg,Estatica,B,B,Correcta,OK
+Photo from 2026-10-02 00-30-44.839281.jpeg,Estatica,B,B,Correcta,OK
+Photo from 2026-10-02 00-46-57.077427.jpeg,Estatica,B,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-47-03.476464.jpeg,Estatica,B,B,Correcta,OK
+Photo from 2026-10-02 00-47-09.677156.jpeg,Estatica,B,B,Correcta,OK
+Photo from 2026-10-01 17-27-40.409554.jpeg,Estatica,C,E,Incorrecta,OK
+Photo from 2026-10-01 17-27-50.567047.jpeg,Estatica,C,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-27-56.659340.jpeg,Estatica,C,C,Correcta,OK
+Photo from 2026-10-01 17-28-05.977803.jpeg,Estatica,C,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-28-13.479978.jpeg,Estatica,C,C,Correcta,OK
+Photo from 2026-10-01 17-28-50.822551.jpeg,Estatica,C,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-31-38.805986.jpeg,Estatica,C,C,Correcta,OK
+Photo from 2026-10-02 00-31-43.562704.jpeg,Estatica,C,C,Correcta,OK
+Photo from 2026-10-02 00-31-46.054622.jpeg,Estatica,C,C,Correcta,OK
+Photo from 2026-10-02 00-48-13.832104.jpeg,Estatica,C,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-48-37.780496.jpeg,Estatica,C,C,Correcta,OK
+Photo from 2026-10-02 00-48-40.632243.jpeg,Estatica,C,C,Correcta,OK
+Photo from 2026-10-01 17-29-11.912797.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-01 17-29-17.188568.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-01 17-29-26.720969.jpeg,Estatica,D,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-29-33.051023.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-01 17-29-44.459693.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-01 17-29-51.572247.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-02 00-33-20.037869.jpeg,Estatica,D,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-33-24.670667.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-02 00-33-37.821646.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-02 00-49-27.295899.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-02 00-49-34.888019.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-02 00-49-41.879648.jpeg,Estatica,D,D,Correcta,OK
+Photo from 2026-10-01 17-30-19.048630.jpeg,Estatica,E,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-30-24.387639.jpeg,Estatica,E,E,Correcta,OK
+Photo from 2026-10-01 17-30-29.180049.jpeg,Estatica,E,E,Correcta,OK
+Photo from 2026-10-01 17-30-35.211072.jpeg,Estatica,E,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-30-40.674593.jpeg,Estatica,E,E,Correcta,OK
+Photo from 2026-10-01 17-30-46.373724.jpeg,Estatica,E,E,Correcta,OK
+Photo from 2026-10-02 00-34-00.582052.jpeg,Estatica,E,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-34-04.920509.jpeg,Estatica,E,E,Correcta,OK
+Photo from 2026-10-02 00-34-10.948298.jpeg,Estatica,E,E,Correcta,OK
+Photo from 2026-10-02 00-49-58.695472.jpeg,Estatica,E,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-50-03.519655.jpeg,Estatica,E,E,Correcta,OK
+Photo from 2026-10-02 00-50-13.335509.jpeg,Estatica,E,E,Correcta,OK
+Photo from 2026-10-01 17-31-07.387216.jpeg,Estatica,F,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-31-12.241298.jpeg,Estatica,F,F,Correcta,OK
+Photo from 2026-10-01 17-31-18.097097.jpeg,Estatica,F,F,Correcta,OK
+Photo from 2026-10-01 17-31-23.409031.jpeg,Estatica,F,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-31-29.755576.jpeg,Estatica,F,F,Correcta,OK
+Photo from 2026-10-01 17-31-36.062054.jpeg,Estatica,F,F,Correcta,OK
+Photo from 2026-10-02 00-34-24.653415.jpeg,Estatica,F,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-34-32.445761.jpeg,Estatica,F,F,Correcta,OK
+Photo from 2026-10-02 00-34-38.184247.jpeg,Estatica,F,F,Correcta,OK
+Photo from 2026-10-02 00-50-20.910269.jpeg,Estatica,F,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-50-27.143006.jpeg,Estatica,F,F,Correcta,OK
+Photo from 2026-10-02 00-50-30.112302.jpeg,Estatica,F,F,Correcta,OK
+Photo from 2026-10-01 17-31-53.082314.jpeg,Estatica,G,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-31-58.076750.jpeg,Estatica,G,G,Correcta,OK
+Photo from 2026-10-01 17-32-05.848815.jpeg,Estatica,G,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-32-10.690141.jpeg,Estatica,G,G,Correcta,OK
+Photo from 2026-10-01 17-32-21.587101.jpeg,Estatica,G,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-32-28.722774.jpeg,Estatica,G,G,Correcta,OK
+Photo from 2026-10-02 00-35-56.344454.jpeg,Estatica,G,G,Correcta,OK
+Photo from 2026-10-02 00-36-05.143517.jpeg,Estatica,G,G,Correcta,OK
+Photo from 2026-10-02 00-36-07.808620.jpeg,Estatica,G,G,Correcta,OK
+Photo from 2026-10-02 00-50-56.974280.jpeg,Estatica,G,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-51-02.774269.jpeg,Estatica,G,G,Correcta,OK
+Photo from 2026-10-02 00-51-06.791057.jpeg,Estatica,G,G,Correcta,OK
+Photo from 2026-10-01 17-32-48.127495.jpeg,Estatica,H,H,Correcta,OK
+Photo from 2026-10-01 17-32-54.456644.jpeg,Estatica,H,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-32-59.397212.jpeg,Estatica,H,H,Correcta,OK
+Photo from 2026-10-01 17-33-04.606216.jpeg,Estatica,H,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-33-10.758664.jpeg,Estatica,H,H,Correcta,OK
+Photo from 2026-10-01 17-33-16.443933.jpeg,Estatica,H,H,Correcta,OK
+Photo from 2026-10-02 00-36-22.899835.jpeg,Estatica,H,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-36-32.504106.jpeg,Estatica,H,H,Correcta,OK
+Photo from 2026-10-02 00-36-36.928158.jpeg,Estatica,H,H,Correcta,OK
+Photo from 2026-10-02 00-51-11.942470.jpeg,Estatica,H,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-51-15.870143.jpeg,Estatica,H,H,Correcta,OK
+Photo from 2026-10-02 00-51-19.974512.jpeg,Estatica,H,H,Correcta,OK
+Photo from 2026-10-01 17-33-37.557410.jpeg,Estatica,I,I,Correcta,OK
+Photo from 2026-10-01 17-33-44.747701.jpeg,Estatica,I,I,Correcta,OK
+Photo from 2026-10-01 17-33-51.303745.jpeg,Estatica,I,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-33-57.171544.jpeg,Estatica,I,I,Correcta,OK
+Photo from 2026-10-01 17-34-01.121769.jpeg,Estatica,I,I,Correcta,OK
+Photo from 2026-10-01 17-34-18.345075.jpeg,Estatica,I,I,Correcta,OK
+Photo from 2026-10-02 00-37-33.104573.jpeg,Estatica,I,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-37-36.063888.jpeg,Estatica,I,I,Correcta,OK
+Photo from 2026-10-02 00-37-41.806957.jpeg,Estatica,I,I,Correcta,OK
+Photo from 2026-10-02 00-52-13.262197.jpeg,Estatica,I,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-52-17.549664.jpeg,Estatica,I,I,Correcta,OK
+Photo from 2026-10-02 00-52-24.621129.jpeg,Estatica,I,I,Correcta,OK
+Recording from 2026-10-01 17-49-51.880075.webm,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-01 17-50-00.443042.webm,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-01 17-50-08.933360.webm,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-01 17-51-23.342297.webm,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-01 17-51-31.958149.webm,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-01 17-52-02.992169.webm,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-02 01-07-46.161859.mp4,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-02 01-07-58.753940.mp4,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-02 01-08-07.377834.mp4,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-02 01-17-38.054751.mp4,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-02 01-17-44.968271.mp4,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-02 01-17-57.538737.mp4,Dinamica,J,J,Correcta,OK
+Recording from 2026-10-01 17-52-22.064136.webm,Dinamica,K,Z,Incorrecta,OK
+Recording from 2026-10-01 17-52-29.539204.webm,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-01 17-52-54.605482.webm,Dinamica,K,Q,Incorrecta,OK
+Recording from 2026-10-01 17-53-09.100832.webm,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-01 17-53-15.292896.webm,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-01 17-53-22.168110.webm,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-02 01-09-58.784528.mp4,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-02 01-10-09.216101.mp4,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-02 01-10-18.476247.mp4,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-02 01-18-35.066482.mp4,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-02 01-19-03.542003.mp4,Dinamica,K,K,Correcta,OK
+Recording from 2026-10-02 01-19-09.426320.mp4,Dinamica,K,Q,Incorrecta,OK
+Photo from 2026-10-01 17-34-35.781529.jpeg,Estatica,L,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-34-41.534947.jpeg,Estatica,L,L,Correcta,OK
+Photo from 2026-10-01 17-34-50.001059.jpeg,Estatica,L,D,Incorrecta,OK
+Photo from 2026-10-01 17-34-56.994301.jpeg,Estatica,L,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-35-03.092439.jpeg,Estatica,L,L,Correcta,OK
+Photo from 2026-10-01 17-35-10.562931.jpeg,Estatica,L,L,Correcta,OK
+Photo from 2026-10-02 00-38-02.166894.jpeg,Estatica,L,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-38-07.310388.jpeg,Estatica,L,L,Correcta,OK
+Photo from 2026-10-02 00-38-11.022532.jpeg,Estatica,L,L,Correcta,OK
+Photo from 2026-10-02 00-53-30.150727.jpeg,Estatica,L,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-53-34.881550.jpeg,Estatica,L,L,Correcta,OK
+Photo from 2026-10-02 00-53-42.405463.jpeg,Estatica,L,L,Correcta,OK
+Photo from 2026-10-01 17-35-33.520988.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-01 17-35-42.028445.jpeg,Estatica,M,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-35-52.816976.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-01 17-35-58.846644.jpeg,Estatica,M,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-36-07.571864.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-01 17-36-20.789689.jpeg,Estatica,M,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-38-32.487381.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-02 00-38-43.246338.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-02 00-38-49.863333.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-02 00-54-08.212412.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-02 00-54-14.332209.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-02 00-54-57.788590.jpeg,Estatica,M,M,Correcta,OK
+Photo from 2026-10-01 17-36-37.615886.jpeg,Estatica,N,N,Correcta,OK
+Photo from 2026-10-01 17-36-41.489589.jpeg,Estatica,N,N,Correcta,OK
+Photo from 2026-10-01 17-36-57.224894.jpeg,Estatica,N,M,Incorrecta,OK
+Photo from 2026-10-01 17-37-11.943896.jpeg,Estatica,N,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-37-15.792413.jpeg,Estatica,N,N,Correcta,OK
+Photo from 2026-10-01 17-37-20.561755.jpeg,Estatica,N,M,Incorrecta,OK
+Photo from 2026-10-02 00-39-18.926111.jpeg,Estatica,N,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-39-22.638907.jpeg,Estatica,N,N,Correcta,OK
+Photo from 2026-10-02 00-39-27.622793.jpeg,Estatica,N,N,Correcta,OK
+Photo from 2026-10-02 00-55-11.480187.jpeg,Estatica,N,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-55-18.163961.jpeg,Estatica,N,N,Correcta,OK
+Photo from 2026-10-02 00-55-22.351808.jpeg,Estatica,N,N,Correcta,OK
+Photo from 2026-10-01 17-37-42.166807.jpeg,Estatica,O,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-37-46.647987.jpeg,Estatica,O,O,Correcta,OK
+Photo from 2026-10-01 17-37-51.055169.jpeg,Estatica,O,O,Correcta,OK
+Photo from 2026-10-01 17-37-57.422605.jpeg,Estatica,O,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-38-06.956723.jpeg,Estatica,O,O,Correcta,OK
+Photo from 2026-10-01 17-38-14.359992.jpeg,Estatica,O,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-40-08.346084.jpeg,Estatica,O,O,Correcta,OK
+Photo from 2026-10-02 00-40-11.182595.jpeg,Estatica,O,O,Correcta,OK
+Photo from 2026-10-02 00-40-14.431456.jpeg,Estatica,O,O,Correcta,OK
+Photo from 2026-10-02 00-56-05.887509.jpeg,Estatica,O,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-56-13.342603.jpeg,Estatica,O,O,Correcta,OK
+Photo from 2026-10-02 00-56-21.119590.jpeg,Estatica,O,O,Correcta,OK
+Photo from 2026-10-01 17-38-33.738681.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-01 17-38-37.642522.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-01 17-38-41.651624.jpeg,Estatica,P,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-38-47.387594.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-01 17-38-59.296457.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-01 17-39-13.999684.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-02 00-40-42.589764.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-02 00-40-45.846380.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-02 00-40-51.569171.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-02 00-56-29.767165.jpeg,Estatica,P,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-56-34.778945.jpeg,Estatica,P,P,Correcta,OK
+Photo from 2026-10-02 00-57-03.998743.jpeg,Estatica,P,P,Correcta,OK
+Recording from 2026-10-01 17-59-36.855100.webm,Dinamica,Q,K,Incorrecta,OK
+Recording from 2026-10-01 17-59-55.291598.webm,Dinamica,Q,Q,Correcta,OK
+Recording from 2026-10-01 18-00-12.444914.webm,Dinamica,Q,X,Incorrecta,OK
+Recording from 2026-10-01 18-00-44.947895.webm,Dinamica,Q,Q,Correcta,OK
+Recording from 2026-10-01 18-00-57.812846.webm,Dinamica,Q,Z,Incorrecta,OK
+Recording from 2026-10-01 18-01-46.293286.webm,Dinamica,Q,Q,Correcta,OK
+Recording from 2026-10-02 01-12-27.599709.mp4,Dinamica,Q,Q,Correcta,OK
+Recording from 2026-10-02 01-12-33.282340.mp4,Dinamica,Q,Q,Correcta,OK
+Recording from 2026-10-02 01-12-37.114044.mp4,Dinamica,Q,Q,Correcta,OK
+Recording from 2026-10-02 01-20-14.784535.mp4,Dinamica,Q,Q,Correcta,OK
+Recording from 2026-10-02 01-20-21.696777.mp4,Dinamica,Q,Q,Correcta,OK
+Recording from 2026-10-02 01-20-25.760626.mp4,Dinamica,Q,Q,Correcta,OK
+Photo from 2026-10-01 17-40-01.903323.jpeg,Estatica,R,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-40-05.916714.jpeg,Estatica,R,R,Correcta,OK
+Photo from 2026-10-01 17-40-10.591833.jpeg,Estatica,R,R,Correcta,OK
+Photo from 2026-10-01 17-40-17.288485.jpeg,Estatica,R,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-40-21.522681.jpeg,Estatica,R,R,Correcta,OK
+Photo from 2026-10-01 17-40-30.258589.jpeg,Estatica,R,R,Correcta,OK
+Photo from 2026-10-02 00-41-46.558544.jpeg,Estatica,R,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-41-53.325544.jpeg,Estatica,R,R,Correcta,OK
+Photo from 2026-10-02 00-41-55.584981.jpeg,Estatica,R,U,Incorrecta,OK
+Photo from 2026-10-02 00-58-03.582569.jpeg,Estatica,R,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-58-07.886049.jpeg,Estatica,R,R,Correcta,OK
+Photo from 2026-10-02 00-58-16.045198.jpeg,Estatica,R,R,Correcta,OK
+Photo from 2026-10-01 17-45-49.917713.jpeg,Estatica,S,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-45-54.923059.jpeg,Estatica,S,S,Correcta,OK
+Photo from 2026-10-01 17-46-08.801851.jpeg,Estatica,S,S,Correcta,OK
+Photo from 2026-10-01 17-46-26.846127.jpeg,Estatica,S,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-46-32.103113.jpeg,Estatica,S,S,Correcta,OK
+Photo from 2026-10-01 17-46-43.668099.jpeg,Estatica,S,S,Correcta,OK
+Photo from 2026-10-02 00-42-10.241613.jpeg,Estatica,S,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-42-15.526137.jpeg,Estatica,S,S,Correcta,OK
+Photo from 2026-10-02 00-42-19.592911.jpeg,Estatica,S,T,Incorrecta,OK
+Photo from 2026-10-02 00-58-28.434514.jpeg,Estatica,S,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-58-31.517439.jpeg,Estatica,S,S,Correcta,OK
+Photo from 2026-10-02 00-58-45.925983.jpeg,Estatica,S,S,Correcta,OK
+Photo from 2026-10-01 17-47-05.691105.jpeg,Estatica,T,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-47-13.590200.jpeg,Estatica,T,T,Correcta,OK
+Photo from 2026-10-01 17-47-19.987277.jpeg,Estatica,T,T,Correcta,OK
+Photo from 2026-10-01 17-48-26.245081.jpeg,Estatica,T,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-48-29.740993.jpeg,Estatica,T,T,Correcta,OK
+Photo from 2026-10-01 17-48-49.843329.jpeg,Estatica,T,T,Correcta,OK
+Photo from 2026-10-02 00-42-31.218251.jpeg,Estatica,T,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-42-38.184928.jpeg,Estatica,T,T,Correcta,OK
+Photo from 2026-10-02 00-42-42.552508.jpeg,Estatica,T,T,Correcta,OK
+Photo from 2026-10-02 00-58-55.621601.jpeg,Estatica,T,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-59-03.413973.jpeg,Estatica,T,T,Correcta,OK
+Photo from 2026-10-02 00-59-10.917292.jpeg,Estatica,T,S,Incorrecta,OK
+Photo from 2026-10-01 17-41-06.123194.jpeg,Estatica,U,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-41-10.917079.jpeg,Estatica,U,U,Correcta,OK
+Photo from 2026-10-01 17-41-15.964641.jpeg,Estatica,U,U,Correcta,OK
+Photo from 2026-10-01 17-41-24.259545.jpeg,Estatica,U,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-41-28.660421.jpeg,Estatica,U,U,Correcta,OK
+Photo from 2026-10-01 17-41-51.649107.jpeg,Estatica,U,U,Correcta,OK
+Photo from 2026-10-02 00-42-57.864120.jpeg,Estatica,U,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-43-03.104822.jpeg,Estatica,U,U,Correcta,OK
+Photo from 2026-10-02 00-43-07.512427.jpeg,Estatica,U,U,Correcta,OK
+Photo from 2026-10-02 01-00-31.131799.jpeg,Estatica,U,,No evaluable,Mano no detectada
+Photo from 2026-10-02 01-00-39.364381.jpeg,Estatica,U,U,Correcta,OK
+Photo from 2026-10-02 01-00-44.923822.jpeg,Estatica,U,R,Incorrecta,OK
+Photo from 2026-10-01 17-42-09.981927.jpeg,Estatica,V,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-42-13.618216.jpeg,Estatica,V,V,Correcta,OK
+Photo from 2026-10-01 17-42-17.784175.jpeg,Estatica,V,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-42-22.389298.jpeg,Estatica,V,V,Correcta,OK
+Photo from 2026-10-01 17-42-27.727953.jpeg,Estatica,V,V,Correcta,OK
+Photo from 2026-10-01 17-42-33.788550.jpeg,Estatica,V,V,Correcta,OK
+Photo from 2026-10-02 00-43-11.032659.jpeg,Estatica,V,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-43-15.312768.jpeg,Estatica,V,U,Incorrecta,OK
+Photo from 2026-10-02 00-43-19.224971.jpeg,Estatica,V,U,Incorrecta,OK
+Photo from 2026-10-02 00-59-17.005360.jpeg,Estatica,V,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-59-24.165057.jpeg,Estatica,V,U,Incorrecta,OK
+Photo from 2026-10-02 00-59-29.349346.jpeg,Estatica,V,U,Incorrecta,OK
+Photo from 2026-10-01 17-42-59.840167.jpeg,Estatica,W,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-43-05.585792.jpeg,Estatica,W,W,Correcta,OK
+Photo from 2026-10-01 17-43-09.094185.jpeg,Estatica,W,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-43-15.042437.jpeg,Estatica,W,V,Incorrecta,OK
+Photo from 2026-10-01 17-43-18.677756.jpeg,Estatica,W,U,Incorrecta,OK
+Photo from 2026-10-01 17-43-22.277442.jpeg,Estatica,W,W,Correcta,OK
+Photo from 2026-10-02 00-43-28.137201.jpeg,Estatica,W,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-43-30.608161.jpeg,Estatica,W,W,Correcta,OK
+Photo from 2026-10-02 00-43-38.727628.jpeg,Estatica,W,W,Correcta,OK
+Photo from 2026-10-02 00-59-39.293198.jpeg,Estatica,W,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-59-49.444899.jpeg,Estatica,W,W,Correcta,OK
+Photo from 2026-10-02 00-59-57.581364.jpeg,Estatica,W,W,Correcta,OK
+Recording from 2026-10-01 18-02-11.443525.webm,Dinamica,X,Q,Incorrecta,OK
+Recording from 2026-10-01 18-02-17.075311.webm,Dinamica,X,X,Correcta,OK
+Recording from 2026-10-01 18-02-27.843877.webm,Dinamica,X,X,Correcta,OK
+Recording from 2026-10-01 18-04-01.140708.webm,Dinamica,X,Q,Incorrecta,OK
+Recording from 2026-10-01 18-04-11.391708.webm,Dinamica,X,Q,Incorrecta,OK
+Recording from 2026-10-01 18-04-20.967339.webm,Dinamica,X,Q,Incorrecta,OK
+Recording from 2026-10-02 01-13-27.601949.mp4,Dinamica,X,X,Correcta,OK
+Recording from 2026-10-02 01-13-41.817596.mp4,Dinamica,X,X,Correcta,OK
+Recording from 2026-10-02 01-13-46.833076.mp4,Dinamica,X,X,Correcta,OK
+Recording from 2026-10-02 01-21-03.480039.mp4,Dinamica,X,X,Correcta,OK
+Recording from 2026-10-02 01-21-09.848302.mp4,Dinamica,X,X,Correcta,OK
+Recording from 2026-10-02 01-21-15.369441.mp4,Dinamica,X,X,Correcta,OK
+Photo from 2026-10-01 17-43-38.714844.jpeg,Estatica,Y,Y,Correcta,OK
+Photo from 2026-10-01 17-43-42.248422.jpeg,Estatica,Y,Y,Correcta,OK
+Photo from 2026-10-01 17-43-48.554079.jpeg,Estatica,Y,,No evaluable,Mano no detectada
+Photo from 2026-10-01 17-43-53.868431.jpeg,Estatica,Y,Y,Correcta,OK
+Photo from 2026-10-01 17-43-58.488618.jpeg,Estatica,Y,H,Incorrecta,OK
+Photo from 2026-10-01 17-44-04.310828.jpeg,Estatica,Y,Y,Correcta,OK
+Photo from 2026-10-02 00-43-56.391388.jpeg,Estatica,Y,,No evaluable,Mano no detectada
+Photo from 2026-10-02 00-44-01.120294.jpeg,Estatica,Y,Y,Correcta,OK
+Photo from 2026-10-02 00-44-09.488249.jpeg,Estatica,Y,I,Incorrecta,OK
+Photo from 2026-10-02 01-01-25.175208.jpeg,Estatica,Y,Y,Correcta,OK
+Photo from 2026-10-02 01-01-29.483217.jpeg,Estatica,Y,Y,Correcta,OK
+Photo from 2026-10-02 01-01-32.180142.jpeg,Estatica,Y,Y,Correcta,OK
+Recording from 2026-10-01 17-57-14.242317.webm,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-01 17-57-23.336871.webm,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-01 17-57-31.769676.webm,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-01 17-58-27.328252.webm,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-01 17-58-35.569355.webm,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-01 17-58-45.067989.webm,Dinamica,Z,J,Incorrecta,OK
+Recording from 2026-10-02 01-14-32.384548.mp4,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-02 01-14-39.345384.mp4,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-02 01-14-46.593286.mp4,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-02 01-21-27.968101.mp4,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-02 01-21-35.600313.mp4,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-02 01-21-44.775749.mp4,Dinamica,Z,Z,Correcta,OK
+Recording from 2026-10-01 17-53-43.558125.webm,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-01 17-53-50.989595.webm,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-01 17-54-02.140729.webm,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-01 17-54-16.855857.webm,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-01 17-54-25.137274.webm,Dinamica,Ñ,K,Incorrecta,OK
+Recording from 2026-10-01 17-54-34.347201.webm,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-02 01-11-24.810654.mp4,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-02 01-11-29.195044.mp4,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-02 01-11-36.003454.mp4,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-02 01-19-34.241300.mp4,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-02 01-19-39.121629.mp4,Dinamica,Ñ,Ñ,Correcta,OK
+Recording from 2026-10-02 01-19-46.057626.mp4,Dinamica,Ñ,Ñ,Correcta,OK
