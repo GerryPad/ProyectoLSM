@@ -13,6 +13,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -41,6 +43,24 @@ fun CameraScreen() {
 
     var puntuacion by remember {
         mutableFloatStateOf(0f)
+    }
+
+    var estado by remember {
+        mutableStateOf("ESPERANDO")
+    }
+
+    var landmarksActuales by remember {
+        mutableStateOf<
+                List<com.google.mediapipe.tasks.components.containers.NormalizedLandmark>
+                >(emptyList())
+    }
+
+    var anchoImagen by remember {
+        mutableIntStateOf(0)
+    }
+
+    var altoImagen by remember {
+        mutableIntStateOf(0)
     }
 
     val previewView = remember {
@@ -128,6 +148,19 @@ fun CameraScreen() {
 
                                     // Obtener los 21 landmarks.
                                     val mano = resultado.landmarks()[0]
+                                    val puntosDetectados = mano.toList()
+
+                                    val anchoDetectado = bitmap.width
+                                    val altoDetectado = bitmap.height
+
+                                    ContextCompat.getMainExecutor(context).execute {
+
+                                        if (activo) {
+                                            landmarksActuales = puntosDetectados
+                                            anchoImagen = anchoDetectado
+                                            altoImagen = altoDetectado
+                                        }
+                                    }
 
                                     // Identificar orientación de la mano.
                                     val tipoMano = resultado.handednesses()
@@ -157,6 +190,7 @@ fun CameraScreen() {
                                                 if (activo) {
                                                     letra = prediccion.letra
                                                     puntuacion = prediccion.puntuacion
+                                                    estado = "DETECTADO"
                                                 }
                                             }
                                     }
@@ -170,6 +204,9 @@ fun CameraScreen() {
                                             if (activo) {
                                                 letra = "Mano no detectada"
                                                 puntuacion = 0f
+                                                estado = "SIN_MANO"
+                                                // Eliminar puntos de la pantalla.
+                                                landmarksActuales = emptyList()
                                             }
                                         }
                                 }
@@ -202,6 +239,8 @@ fun CameraScreen() {
 
                                 if (activo) {
                                     letra = "Error al cargar modelo"
+                                    puntuacion = 0f
+                                    estado = "ERROR"
                                 }
                             }
                     }
@@ -247,17 +286,71 @@ fun CameraScreen() {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+
+        // ==================================
+        // VISTA DE LA CÁMARA
+        // ==================================
 
         AndroidView(
             factory = { previewView },
             modifier = Modifier.fillMaxSize()
         )
 
+        // VISUALIZACIÓN DE LANDMARKS
+        HandLandmarksOverlay(
+            landmarks = landmarksActuales,
+            imageWidth = anchoImagen,
+            imageHeight = altoImagen,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // ==================================
+        // COLORES SEGÚN EL ESTADO
+        // ==================================
+
+        val colorEstado = when (estado) {
+
+            "DETECTADO" -> Color(0xFF4CAF50)
+
+            "SIN_MANO" -> Color(0xFFFF9800)
+
+            "ERROR" -> Color(0xFFF44336)
+
+            else -> Color(0xFFFFEB3B)
+        }
+
+        val mensajeEstado = when (estado) {
+
+            "DETECTADO" -> "Mano detectada"
+
+            "SIN_MANO" -> "Mano no detectada"
+
+            "ERROR" -> "Error de reconocimiento"
+
+            else -> "Esperando detección..."
+        }
+
+        // ==================================
+        // PANEL DE PREDICCIÓN
+        // ==================================
+
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 55.dp),
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 40.dp
+                )
+                .background(
+                    color = Color(0xFF17212B).copy(alpha = 0.88f),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(20.dp),
+
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -268,17 +361,45 @@ fun CameraScreen() {
                 color = Color.White
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Letra: $letra",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Green
+            Spacer(
+                modifier = Modifier.height(12.dp)
             )
 
+            // Estado actual
             Text(
-                text = "Puntuación: %.3f".format(puntuacion),
+                text = mensajeEstado,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = colorEstado
+            )
+
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            // Letra reconocida
+            Text(
+                text = if (estado == "DETECTADO") {
+                    letra
+                } else {
+                    "-"
+                },
+                fontSize = 64.sp,
+                fontWeight = FontWeight.Bold,
+                color = colorEstado
+            )
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
+            // Puntuación del modelo
+            Text(
+                text = if (estado == "DETECTADO") {
+                    "Puntuación: %.3f".format(puntuacion)
+                } else {
+                    "Puntuación: --"
+                },
                 fontSize = 16.sp,
                 color = Color.White
             )
