@@ -89,7 +89,11 @@ fun CameraScreen() {
 
         var cameraProvider: ProcessCameraProvider? = null
         var activo = true
-        var recursos: Pair<HandLandmarkerHelper?, LSMClassifier?>? = null
+        var recursos: Triple<
+                HandLandmarkerHelper,
+                LSMClassifier,
+                DynamicLSMClassifier
+                >? = null
 
         val listener = Runnable {
 
@@ -129,25 +133,59 @@ fun CameraScreen() {
                             detectorActivo.close()
                             throw e
                         }
+                        // Inicializar el modelo dinámico.
+                        val clasificadorDinamico = try {
+                            DynamicLSMClassifier(context)
+                        } catch (e: Exception) {
+                            clasificadorActivo.close()
+                            detectorActivo.close()
+                            throw e
+                        }
+
+                        // Crear la máquina de estados.
+                        val reconocedorDinamico = DynamicRecognizer(
+                            clasificadorDinamico
+                        )
 
                         // Guardar referencias para liberar los recursos.
-                        recursos = Pair(detectorActivo, clasificadorActivo)
+                        recursos = Triple(
+                            detectorActivo,
+                            clasificadorActivo,
+                            clasificadorDinamico
+                        )
 
                         // Configurar análisis de imágenes.
                         analysis.setAnalyzer(executor) { imageProxy ->
 
                             try {
 
-                                // Convertir fotograma de CameraX a Bitmap.
+                                // ==================================
+                                // 1. CONVERTIR IMAGEN
+                                // ==================================
+
                                 val bitmap = convertirImagen(imageProxy)
 
-                                // Detectar mano utilizando MediaPipe.
+                                // ==================================
+                                // 2. DETECTAR MANO
+                                // ==================================
+
                                 val resultado = detectorActivo.detectar(bitmap)
 
                                 if (resultado.landmarks().isNotEmpty()) {
 
-                                    // Obtener los 21 landmarks.
                                     val mano = resultado.landmarks()[0]
+
+                                    val tipoMano = resultado.handednesses()
+                                        .firstOrNull()
+                                        ?.firstOrNull()
+                                        ?.categoryName()
+
+                                    val manoIzquierda = tipoMano == "Left"
+
+                                    // ==================================
+                                    // 3. ACTUALIZAR LANDMARKS VISUALES
+                                    // ==================================
+
                                     val puntosDetectados = mano.toList()
 
                                     val anchoDetectado = bitmap.width
@@ -156,57 +194,147 @@ fun CameraScreen() {
                                     ContextCompat.getMainExecutor(context).execute {
 
                                         if (activo) {
+
                                             landmarksActuales = puntosDetectados
+
                                             anchoImagen = anchoDetectado
                                             altoImagen = altoDetectado
                                         }
                                     }
 
-                                    // Identificar orientación de la mano.
-                                    val tipoMano = resultado.handednesses()
-                                        .firstOrNull()
-                                        ?.firstOrNull()
-                                        ?.categoryName()
+                                    // ==================================
+                                    // 4. ANALIZAR MOVIMIENTO
+                                    // ==================================
 
-                                    // Normalizar coordenadas.
-                                    val caracteristicas =
-                                        LandmarkProcessor.procesarEstatico(
-                                            mano,
-                                            tipoMano == "Left"
+                                    val resultadoDinamico =
+                                        reconocedorDinamico.procesar(
+                                            landmarks = mano,
+                                            manoIzquierda = manoIzquierda
                                         )
 
-                                    if (caracteristicas != null) {
+                                    // ==================================
+                                    // 5. DECIDIR TIPO DE RECONOCIMIENTO
+                                    // ==================================
 
-                                        // Ejecutar modelo estático.
-                                        val prediccion =
-                                            clasificadorActivo.predecir(
-                                                caracteristicas
-                                            )
+                                    when (resultadoDinamico.estado) {
 
-                                        // Actualizar interfaz.
-                                        ContextCompat.getMainExecutor(context)
-                                            .execute {
+                                        DynamicRecognizer.Estado.ESPERANDO -> {
 
-                                                if (activo) {
-                                                    letra = prediccion.letra
-                                                    puntuacion = prediccion.puntuacion
-                                                    estado = "DETECTADO"
-                                                }
+                                            // Reconocimiento estático.
+
+                                            val caracteristicas =
+                                                LandmarkProcessor.procesarEstatico(
+                                                    mano,
+                                                    manoIzquierda
+                                                )
+
+                                            if (caracteristicas != null) {
+
+                                                val prediccion =
+                                                    clasificadorActivo.predecir(
+                                                        caracteristicas
+                                                    )
+
+                                                ContextCompat.getMainExecutor(context)
+                                                    .execute {
+
+                                                        if (activo) {
+
+                                                            letra = prediccion.letra
+
+                                                            puntuacion =
+                                                                prediccion.puntuacion
+
+                                                            estado = "DETECTADO"
+                                                        }
+                                                    }
                                             }
+                                        }
+
+                                        DynamicRecognizer.Estado.CAPTURANDO -> {
+
+                                            // Se está realizando una seña dinámica.
+                                            // No ejecutamos el modelo estático.
+
+                                            ContextCompat.getMainExecutor(context)
+                                                .execute {
+
+                                                    if (activo) {
+
+                                                        estado = "CAPTURANDO"
+
+                                                        letra = "..."
+
+                                                        puntuacion = 0f
+                                                    }
+                                                }
+                                        }
+
+                                        DynamicRecognizer.Estado.PAUSA -> {
+
+                                            // La captura terminó.
+                                            // Mostrar resultado si existe una predicción.
+
+                                            val prediccion =
+                                                resultadoDinamico.prediccion
+
+                                            if (prediccion != null) {
+
+                                                ContextCompat.getMainExecutor(context)
+                                                    .execute {
+
+                                                        if (activo) {
+
+                                                            letra = prediccion.letra
+
+                                                            puntuacion =
+                                                                prediccion.puntuacion
+
+                                                            estado = "DETECTADO"
+                                                        }
+                                                    }
+                                            }
+                                        }
                                     }
 
                                 } else {
 
-                                    // No se detectó ninguna mano.
+                                    // ==================================
+                                    // 6. MANO NO DETECTADA
+                                    // ==================================
+
+                                    val resultadoDinamico =
+                                        reconocedorDinamico.procesar(
+                                            landmarks = null,
+                                            manoIzquierda = false
+                                        )
+
                                     ContextCompat.getMainExecutor(context)
                                         .execute {
 
                                             if (activo) {
-                                                letra = "Mano no detectada"
-                                                puntuacion = 0f
-                                                estado = "SIN_MANO"
-                                                // Eliminar puntos de la pantalla.
+
                                                 landmarksActuales = emptyList()
+
+                                                if (resultadoDinamico.prediccion != null) {
+
+                                                    // Se completó una seña al retirar la mano.
+                                                    letra =
+                                                        resultadoDinamico.prediccion.letra
+
+                                                    puntuacion =
+                                                        resultadoDinamico.prediccion.puntuacion
+
+                                                    estado = "DETECTADO"
+
+                                                } else {
+
+                                                    letra = "Mano no detectada"
+
+                                                    puntuacion = 0f
+
+                                                    estado = "SIN_MANO"
+                                                }
                                             }
                                         }
                                 }
@@ -221,7 +349,6 @@ fun CameraScreen() {
 
                             } finally {
 
-                                // Liberar fotograma para continuar capturando.
                                 imageProxy.close()
                             }
                         }
@@ -277,6 +404,7 @@ fun CameraScreen() {
 
                 recursos?.first?.close()
                 recursos?.second?.close()
+                recursos?.third?.close()
 
                 recursos = null
             }
@@ -312,24 +440,18 @@ fun CameraScreen() {
         // ==================================
 
         val colorEstado = when (estado) {
-
             "DETECTADO" -> Color(0xFF4CAF50)
-
+            "CAPTURANDO" -> Color(0xFF03A9F4)
             "SIN_MANO" -> Color(0xFFFF9800)
-
             "ERROR" -> Color(0xFFF44336)
-
             else -> Color(0xFFFFEB3B)
         }
 
         val mensajeEstado = when (estado) {
-
             "DETECTADO" -> "Mano detectada"
-
+            "CAPTURANDO" -> "Capturando seña dinámica..."
             "SIN_MANO" -> "Mano no detectada"
-
             "ERROR" -> "Error de reconocimiento"
-
             else -> "Esperando detección..."
         }
 
