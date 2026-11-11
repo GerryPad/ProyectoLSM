@@ -10,6 +10,12 @@ import tensorflow as tf # Requerido para leer y ejecutar los modelos .tflite
 TIEMPO_MOSTRAR_DINAMICA = 0   
 tiempo_inicio_pausa = 0
 
+# --- LISTAS DE CLASES (MAPEO DE NÚMEROS A LETRAS) ---
+# Ajusta estas listas exactamente en el orden alfabético que usó el LabelEncoder al entrenar cada modelo
+CLASES_ESTATICAS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'W', 'Y']
+CLASES_DINAMICAS = ['J', 'K', 'Ñ', 'Q', 'X', 'Z'] # Cámbiala si tus dinámicas tienen otras clases
+# ----------------------------------------------------
+
 # --- CARGA DE MODELOS TFLITE ---
 print("Cargando modelos TFLite...")
 
@@ -69,13 +75,19 @@ letra_predicha = "Esperando letra..."
 color_texto = (0, 0, 255)      
 muneca_anterior = None
 
-# Función auxiliar para ejecutar inferencia con un intérprete TFLite genérico
-def ejecutar_inferencia_tflite(interprete, input_details, output_details, vector_caracteristicas):
+# Función auxiliar para ejecutar inferencia con un intérprete TFLite y mapear a letra
+def ejecutar_inferencia_tflite_con_letra(interprete, input_details, output_details, vector_caracteristicas, lista_clases):
     entrada = np.array([vector_caracteristicas], dtype=np.float32)
     interprete.set_tensor(input_details[0]['index'], entrada)
     interprete.invoke()
     salida = interprete.get_tensor(output_details[0]['index'])
-    return np.argmax(salida[0])
+    indice = np.argmax(salida[0])
+    
+    # Validar que el índice esté dentro del rango de la lista de clases
+    if indice < len(lista_clases):
+        return lista_clases[indice]
+    else:
+        return "?"
 
 def convertir_a_75_frames(fotogramas):
     if not fotogramas:
@@ -109,12 +121,12 @@ def ejecutar_prediccion_dinamica(fotogramas):
         secuencia_uniforme = convertir_a_75_frames(secuencia_cruda)
 
         if secuencia_uniforme and len(secuencia_uniforme) == 4950:
-            indice_clase = ejecutar_inferencia_tflite(
-                interprete_dinamico, input_details_dinamico, output_details_dinamico, secuencia_uniforme
+            # Realiza la predicción usando el modelo dinámico y mapea a letra
+            letra_predicha = ejecutar_inferencia_tflite_con_letra(
+                interprete_dinamico, input_details_dinamico, output_details_dinamico, secuencia_uniforme, CLASES_DINAMICAS
             )
-            letra_predicha = str(indice_clase) # O mapealo a tu lista de letras si usaste LabelEncoder
             color_texto = (0, 255, 0) 
-            print(f"[DINAMICO EXITO] Clase reconocida: {letra_predicha}")
+            print(f"[DINAMICO EXITO] Letra reconocida: {letra_predicha}")
         else:
             letra_predicha = "Error de dimensiones"
             color_texto = (0, 0, 255)
@@ -167,11 +179,10 @@ while cap.isOpened():
                 for x, y, z in landmarks_relativos:
                     fila_landmarks.extend([x / distancia_maxima, y / distancia_maxima, z / distancia_maxima])
                 
-                # Predicción estática mediante TFLite
-                indice_estatico = ejecutar_inferencia_tflite(
-                    interprete_estatico, input_details_estatico, output_details_estatico, fila_landmarks
+                # Predicción estática mediante TFLite mapeada a letra
+                letra_predicha = ejecutar_inferencia_tflite_con_letra(
+                    interprete_estatico, input_details_estatico, output_details_estatico, fila_landmarks, CLASES_ESTATICAS
                 )
-                letra_predicha = str(indice_estatico)
                 color_texto = (0, 255, 0)
 
             if movimiento_frame >= UMBRAL_MOVIMIENTO:
