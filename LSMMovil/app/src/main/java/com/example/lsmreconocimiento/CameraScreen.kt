@@ -31,11 +31,26 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 @Composable
 fun CameraScreen(
-    onRegresar: () -> Unit
+    onRegresar: () -> Unit,
+    modoDeletreo: Boolean = false,
+    habilitado: Boolean = true,
+    reinicio: Int = 0,
+    onPrediccion: (String, Float) -> Unit = { _, _ -> }
 ) {
+
+    val callbackActual by rememberUpdatedState(onPrediccion)
+    val bloqueado = remember { AtomicBoolean(false) }
+    val versionReinicio = remember { AtomicInteger(0) }
+    val habilitadoActual = remember { AtomicBoolean(true) }
+    SideEffect {
+        versionReinicio.set(reinicio)
+        habilitadoActual.set(habilitado)
+    }
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -157,6 +172,31 @@ fun CameraScreen(
                             clasificadorDinamico
                         )
 
+                        // Estado local del analizador, utilizado solo en Deletreo.
+                        var reinicioVisto = versionReinicio.get()
+                        var esperandoRetiro = false
+                        var framesSinMano = 0
+                        var letraEstable = ""
+                        var framesEstables = 0
+                        var inicioEstabilidad = 0L
+
+                        fun limpiarIntento() {
+                            reconocedorDinamico.reiniciar()
+                            letraEstable = ""
+                            framesEstables = 0
+                            inicioEstabilidad = 0L
+                        }
+
+                        fun publicar(letraNueva: String, score: Float) {
+                            if (!habilitadoActual.get()) return
+                            if (!bloqueado.compareAndSet(false, true)) return
+                            ContextCompat.getMainExecutor(context).execute {
+                                if (activo && habilitadoActual.get()) {
+                                    callbackActual(letraNueva, score)
+                                }
+                            }
+                        }
+
                         // Configurar análisis de imágenes.
                         analysis.setAnalyzer(executor) { imageProxy ->
 
@@ -174,173 +214,242 @@ fun CameraScreen(
 
                                 val resultado = detectorActivo.detectar(bitmap)
 
-                                if (resultado.landmarks().isNotEmpty()) {
+                                if (modoDeletreo) {
+                                    val hayMano = resultado.landmarks().isNotEmpty()
+                                    val version = versionReinicio.get()
+                                    if (version != reinicioVisto) {
+                                        reinicioVisto = version
+                                        esperandoRetiro = true
+                                        framesSinMano = 0
+                                        bloqueado.set(true)
+                                        limpiarIntento()
+                                    }
 
-                                    val mano = resultado.landmarks()[0]
-
-                                    val tipoMano = resultado.handednesses()
-                                        .firstOrNull()
-                                        ?.firstOrNull()
-                                        ?.categoryName()
-
-                                    val manoIzquierda = tipoMano == "Left"
-
-                                    // ==================================
-                                    // 3. ACTUALIZAR LANDMARKS VISUALES
-                                    // ==================================
-
-                                    val puntosDetectados = mano.toList()
-
-                                    val anchoDetectado = bitmap.width
-                                    val altoDetectado = bitmap.height
-
+                                    val puntos = if (hayMano) resultado.landmarks()[0].toList()
+                                    else emptyList()
                                     ContextCompat.getMainExecutor(context).execute {
-
                                         if (activo) {
-
-                                            landmarksActuales = puntosDetectados
-
-                                            anchoImagen = anchoDetectado
-                                            altoImagen = altoDetectado
+                                            landmarksActuales = puntos
+                                            anchoImagen = bitmap.width
+                                            altoImagen = bitmap.height
                                         }
                                     }
 
-                                    // ==================================
-                                    // 4. ANALIZAR MOVIMIENTO
-                                    // ==================================
+                                    if (!habilitadoActual.get()) {
+                                        bloqueado.set(true)
+                                        limpiarIntento()
+                                    } else if (esperandoRetiro) {
+                                        if (!hayMano) framesSinMano++ else framesSinMano = 0
+                                        if (framesSinMano >= 8) {
+                                            esperandoRetiro = false
+                                            bloqueado.set(false)
+                                            limpiarIntento()
+                                        }
+                                    } else if (!bloqueado.get()) {
+                                        val mano = resultado.landmarks().firstOrNull()
+                                        val izquierda = resultado.handednesses()
+                                            .firstOrNull()?.firstOrNull()?.categoryName() == "Left"
+                                        val dinamico = reconocedorDinamico.procesar(mano, izquierda)
 
-                                    val resultadoDinamico =
-                                        reconocedorDinamico.procesar(
-                                            landmarks = mano,
-                                            manoIzquierda = manoIzquierda
-                                        )
-
-                                    // ==================================
-                                    // 5. DECIDIR TIPO DE RECONOCIMIENTO
-                                    // ==================================
-
-                                    when (resultadoDinamico.estado) {
-
-                                        DynamicRecognizer.Estado.ESPERANDO -> {
-
-                                            // Reconocimiento estático.
-
-                                            val caracteristicas =
-                                                LandmarkProcessor.procesarEstatico(
-                                                    mano,
-                                                    manoIzquierda
-                                                )
-
+                                        if (dinamico.prediccion != null) {
+                                            publicar(dinamico.prediccion.letra,
+                                                dinamico.prediccion.puntuacion)
+                                            letraEstable = ""
+                                            framesEstables = 0
+                                        } else if (mano != null &&
+                                            dinamico.estado == DynamicRecognizer.Estado.ESPERANDO) {
+                                            val caracteristicas = LandmarkProcessor.procesarEstatico(
+                                                mano, izquierda)
                                             if (caracteristicas != null) {
-
-                                                val prediccion =
-                                                    clasificadorActivo.predecir(
-                                                        caracteristicas
-                                                    )
-
-                                                ContextCompat.getMainExecutor(context)
-                                                    .execute {
-
-                                                        if (activo) {
-
-                                                            letra = prediccion.letra
-
-                                                            puntuacion =
-                                                                prediccion.puntuacion
-
-                                                            estado = "DETECTADO"
-                                                        }
-                                                    }
-                                            }
-                                        }
-
-                                        DynamicRecognizer.Estado.CAPTURANDO -> {
-
-                                            // Se está realizando una seña dinámica.
-                                            // No ejecutamos el modelo estático.
-
-                                            ContextCompat.getMainExecutor(context)
-                                                .execute {
-
-                                                    if (activo) {
-
-                                                        estado = "CAPTURANDO"
-
-                                                        letra = "..."
-
-                                                        puntuacion = 0f
-                                                    }
+                                                val pred = clasificadorActivo.predecir(caracteristicas)
+                                                val ahora = System.nanoTime() / 1_000_000L
+                                                if (pred.letra != letraEstable) {
+                                                    letraEstable = pred.letra
+                                                    framesEstables = 1
+                                                    inicioEstabilidad = ahora
+                                                } else {
+                                                    framesEstables++
                                                 }
-                                        }
-
-                                        DynamicRecognizer.Estado.PAUSA -> {
-
-                                            // La captura terminó.
-                                            // Mostrar resultado si existe una predicción.
-
-                                            val prediccion =
-                                                resultadoDinamico.prediccion
-
-                                            if (prediccion != null) {
-
-                                                ContextCompat.getMainExecutor(context)
-                                                    .execute {
-
-                                                        if (activo) {
-
-                                                            letra = prediccion.letra
-
-                                                            puntuacion =
-                                                                prediccion.puntuacion
-
-                                                            estado = "DETECTADO"
-                                                        }
-                                                    }
+                                                // Estabilidad temporal; ajustar tras pruebas reales.
+                                                if (framesEstables >= 12 &&
+                                                    ahora - inicioEstabilidad >= 650L) {
+                                                    publicar(pred.letra, pred.puntuacion)
+                                                }
                                             }
+                                        } else {
+                                            letraEstable = ""
+                                            framesEstables = 0
                                         }
                                     }
-
                                 } else {
+                                    if (resultado.landmarks().isNotEmpty()) {
 
-                                    // ==================================
-                                    // 6. MANO NO DETECTADA
-                                    // ==================================
+                                        val mano = resultado.landmarks()[0]
 
-                                    val resultadoDinamico =
-                                        reconocedorDinamico.procesar(
-                                            landmarks = null,
-                                            manoIzquierda = false
-                                        )
+                                        val tipoMano = resultado.handednesses()
+                                            .firstOrNull()
+                                            ?.firstOrNull()
+                                            ?.categoryName()
 
-                                    ContextCompat.getMainExecutor(context)
-                                        .execute {
+                                        val manoIzquierda = tipoMano == "Left"
+
+                                        // ==================================
+                                        // 3. ACTUALIZAR LANDMARKS VISUALES
+                                        // ==================================
+
+                                        val puntosDetectados = mano.toList()
+
+                                        val anchoDetectado = bitmap.width
+                                        val altoDetectado = bitmap.height
+
+                                        ContextCompat.getMainExecutor(context).execute {
 
                                             if (activo) {
 
-                                                landmarksActuales = emptyList()
+                                                landmarksActuales = puntosDetectados
 
-                                                if (resultadoDinamico.prediccion != null) {
+                                                anchoImagen = anchoDetectado
+                                                altoImagen = altoDetectado
+                                            }
+                                        }
 
-                                                    // Se completó una seña al retirar la mano.
-                                                    letra =
-                                                        resultadoDinamico.prediccion.letra
+                                        // ==================================
+                                        // 4. ANALIZAR MOVIMIENTO
+                                        // ==================================
 
-                                                    puntuacion =
-                                                        resultadoDinamico.prediccion.puntuacion
+                                        val resultadoDinamico =
+                                            reconocedorDinamico.procesar(
+                                                landmarks = mano,
+                                                manoIzquierda = manoIzquierda
+                                            )
 
-                                                    estado = "DETECTADO"
+                                        // ==================================
+                                        // 5. DECIDIR TIPO DE RECONOCIMIENTO
+                                        // ==================================
 
-                                                } else {
+                                        when (resultadoDinamico.estado) {
 
-                                                    letra = "Mano no detectada"
+                                            DynamicRecognizer.Estado.ESPERANDO -> {
 
-                                                    puntuacion = 0f
+                                                // Reconocimiento estático.
 
-                                                    estado = "SIN_MANO"
+                                                val caracteristicas =
+                                                    LandmarkProcessor.procesarEstatico(
+                                                        mano,
+                                                        manoIzquierda
+                                                    )
+
+                                                if (caracteristicas != null) {
+
+                                                    val prediccion =
+                                                        clasificadorActivo.predecir(
+                                                            caracteristicas
+                                                        )
+
+                                                    ContextCompat.getMainExecutor(context)
+                                                        .execute {
+
+                                                            if (activo) {
+
+                                                                letra = prediccion.letra
+
+                                                                puntuacion =
+                                                                    prediccion.puntuacion
+
+                                                                estado = "DETECTADO"
+                                                            }
+                                                        }
+                                                }
+                                            }
+
+                                            DynamicRecognizer.Estado.CAPTURANDO -> {
+
+                                                // Se está realizando una seña dinámica.
+                                                // No ejecutamos el modelo estático.
+
+                                                ContextCompat.getMainExecutor(context)
+                                                    .execute {
+
+                                                        if (activo) {
+
+                                                            estado = "CAPTURANDO"
+
+                                                            letra = "..."
+
+                                                            puntuacion = 0f
+                                                        }
+                                                    }
+                                            }
+
+                                            DynamicRecognizer.Estado.PAUSA -> {
+
+                                                // La captura terminó.
+                                                // Mostrar resultado si existe una predicción.
+
+                                                val prediccion =
+                                                    resultadoDinamico.prediccion
+
+                                                if (prediccion != null) {
+
+                                                    ContextCompat.getMainExecutor(context)
+                                                        .execute {
+
+                                                            if (activo) {
+
+                                                                letra = prediccion.letra
+
+                                                                puntuacion =
+                                                                    prediccion.puntuacion
+
+                                                                estado = "DETECTADO"
+                                                            }
+                                                        }
                                                 }
                                             }
                                         }
-                                }
+
+                                    } else {
+
+                                        // ==================================
+                                        // 6. MANO NO DETECTADA
+                                        // ==================================
+
+                                        val resultadoDinamico =
+                                            reconocedorDinamico.procesar(
+                                                landmarks = null,
+                                                manoIzquierda = false
+                                            )
+
+                                        ContextCompat.getMainExecutor(context)
+                                            .execute {
+
+                                                if (activo) {
+
+                                                    landmarksActuales = emptyList()
+
+                                                    if (resultadoDinamico.prediccion != null) {
+
+                                                        // Se completó una seña al retirar la mano.
+                                                        letra =
+                                                            resultadoDinamico.prediccion.letra
+
+                                                        puntuacion =
+                                                            resultadoDinamico.prediccion.puntuacion
+
+                                                        estado = "DETECTADO"
+
+                                                    } else {
+
+                                                        letra = "Mano no detectada"
+
+                                                        puntuacion = 0f
+
+                                                        estado = "SIN_MANO"
+                                                    }
+                                                }
+                                            }
+                                    }
+                                } // Fin del modo Práctica
 
                             } catch (e: Exception) {
 
@@ -438,114 +547,116 @@ fun CameraScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // ==================================
-        // COLORES SEGÚN EL ESTADO
-        // ==================================
+        if (!modoDeletreo) {
+            // ==================================
+            // COLORES SEGÚN EL ESTADO
+            // ==================================
 
-        val colorEstado = when (estado) {
-            "DETECTADO" -> Color(0xFF4CAF50)
-            "CAPTURANDO" -> Color(0xFF03A9F4)
-            "SIN_MANO" -> Color(0xFFFF9800)
-            "ERROR" -> Color(0xFFF44336)
-            else -> Color(0xFFFFEB3B)
-        }
+            val colorEstado = when (estado) {
+                "DETECTADO" -> Color(0xFF4CAF50)
+                "CAPTURANDO" -> Color(0xFF03A9F4)
+                "SIN_MANO" -> Color(0xFFFF9800)
+                "ERROR" -> Color(0xFFF44336)
+                else -> Color(0xFFFFEB3B)
+            }
 
-        val mensajeEstado = when (estado) {
-            "DETECTADO" -> "Mano detectada"
-            "CAPTURANDO" -> "Capturando seña dinámica..."
-            "SIN_MANO" -> "Mano no detectada"
-            "ERROR" -> "Error de reconocimiento"
-            else -> "Esperando detección..."
-        }
+            val mensajeEstado = when (estado) {
+                "DETECTADO" -> "Mano detectada"
+                "CAPTURANDO" -> "Capturando seña dinámica..."
+                "SIN_MANO" -> "Mano no detectada"
+                "ERROR" -> "Error de reconocimiento"
+                else -> "Esperando detección..."
+            }
 
-        // ==================================
-        // PANEL DE PREDICCIÓN
-        // ==================================
+            // ==================================
+            // PANEL DE PREDICCIÓN
+            // ==================================
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 95.dp,
-                    bottom = 16.dp
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 95.dp,
+                        bottom = 16.dp
+                    )
+                    .background(
+                        color = Color(0xFF17212B).copy(alpha = 0.88f),
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                    .padding(20.dp),
+
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                Text(
+                    text = "Reconocimiento LSM",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
-                .background(
-                    color = Color(0xFF17212B).copy(alpha = 0.88f),
-                    shape = RoundedCornerShape(20.dp)
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
                 )
-                .padding(20.dp),
 
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Text(
-                text = "Reconocimiento LSM",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            // Estado actual
-            Text(
-                text = mensajeEstado,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = colorEstado
-            )
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
-
-            // Letra reconocida
-            Text(
-                text = if (estado == "DETECTADO") {
-                    letra
-                } else {
-                    "-"
-                },
-                fontSize = 64.sp,
-                fontWeight = FontWeight.Bold,
-                color = colorEstado
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            // Puntuación del modelo
-            Text(
-                text = if (estado == "DETECTADO") {
-                    "Puntuación: %.3f".format(puntuacion)
-                } else {
-                    "Puntuación: --"
-                },
-                fontSize = 16.sp,
-                color = Color.White
-            )
-        }
-
-        // BOTÓN PARA REGRESAR AL MENÚ
-        Button(
-            onClick = onRegresar,
-
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(
-                    start = 16.dp,
-                    top = 16.dp
+                // Estado actual
+                Text(
+                    text = mensajeEstado,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = colorEstado
                 )
-        ) {
 
-            Text("← Regresar")
-        }
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
+
+                // Letra reconocida
+                Text(
+                    text = if (estado == "DETECTADO") {
+                        letra
+                    } else {
+                        "-"
+                    },
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorEstado
+                )
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+
+                // Puntuación del modelo
+                Text(
+                    text = if (estado == "DETECTADO") {
+                        "Puntuación: %.3f".format(puntuacion)
+                    } else {
+                        "Puntuación: --"
+                    },
+                    fontSize = 16.sp,
+                    color = Color.White
+                )
+            }
+
+            // BOTÓN PARA REGRESAR AL MENÚ
+            Button(
+                onClick = onRegresar,
+
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(
+                        start = 16.dp,
+                        top = 16.dp
+                    )
+            ) {
+
+                Text("← Regresar")
+            }
+        } // Panel y regreso exclusivos de Práctica
 
     }
 }

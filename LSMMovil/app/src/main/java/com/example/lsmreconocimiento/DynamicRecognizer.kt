@@ -212,7 +212,7 @@ class DynamicRecognizer(
         return clasificador.predecir(caracteristicas)
     }
 
-    private fun reiniciar() {
+    fun reiniciar() {
 
         estado = Estado.ESPERANDO
 

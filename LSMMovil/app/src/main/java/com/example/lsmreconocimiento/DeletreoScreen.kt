@@ -39,13 +39,9 @@ fun DeletreoScreen(
         mutableStateOf(false)
     }
 
-    // Variable temporal para probar la interfaz.
-    // Se eliminará al conectar el reconocimiento.
-    var indicePrueba by remember {
-        mutableIntStateOf(0)
-    }
-
-    val letrasPrueba = listOf("H", "O", "L", "A")
+    var reinicio by remember { mutableIntStateOf(0) }
+    var esperandoRetiro by remember { mutableStateOf(false) }
+    val puedeReconocer = !finalizado && letraPredicha == null
 
     val palabra = letrasConfirmadas.joinToString("")
 
@@ -56,25 +52,20 @@ fun DeletreoScreen(
             .background(Color(0xFF101820))
     ) {
 
-        // ÁREA CENTRAL
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = 260.dp,
-                    bottom = 220.dp
-                ),
-
-            contentAlignment = Alignment.Center
-        ) {
-
-            Text(
-                text = "Vista de cámara\n(Próxima etapa)",
-                color = Color.LightGray,
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center
-            )
-        }
+        // Cámara y landmarks compartidos con Práctica.
+        CameraScreen(
+            onRegresar = onRegresar,
+            modoDeletreo = true,
+            habilitado = !finalizado,
+            reinicio = reinicio,
+            onPrediccion = { letra, score ->
+                if (!finalizado && letraPredicha == null) {
+                    letraPredicha = letra
+                    puntuacion = score
+                    esperandoRetiro = false
+                }
+            }
+        )
 
         // BOTÓN REGRESAR
         Button(
@@ -192,26 +183,16 @@ fun DeletreoScreen(
 
             if (!finalizado) {
 
-                // BOTÓN TEMPORAL DE PRUEBA
-                Button(
-                    onClick = {
-
-                        letraPredicha = letrasPrueba[
-                            indicePrueba % letrasPrueba.size
-                        ]
-
-                        puntuacion = 0.95f
+                Text(
+                    text = when {
+                        letraPredicha != null -> "¿Es correcta la letra?"
+                        esperandoRetiro -> "Retira la mano antes de continuar"
+                        else -> "Realiza una seña frente a la cámara"
                     },
-
-                    enabled = letraPredicha == null
-                ) {
-
-                    Text("Simular predicción")
-                }
-
-                Spacer(
-                    modifier = Modifier.height(12.dp)
+                    color = Color.LightGray,
+                    fontSize = 15.sp
                 )
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -227,11 +208,11 @@ fun DeletreoScreen(
 
                                 letrasConfirmadas.add(letra)
 
-                                indicePrueba++
-
                                 letraPredicha = null
 
                                 puntuacion = 0f
+                                esperandoRetiro = true
+                                reinicio++
                             }
                         },
 
@@ -258,6 +239,8 @@ fun DeletreoScreen(
                             letraPredicha = null
 
                             puntuacion = 0f
+                            esperandoRetiro = true
+                            reinicio++
                         },
 
                         enabled = letraPredicha != null,
@@ -317,7 +300,8 @@ fun DeletreoScreen(
 
                         finalizado = false
 
-                        indicePrueba = 0
+                        esperandoRetiro = true
+                        reinicio++
                     },
 
                     modifier = Modifier.fillMaxWidth(),
