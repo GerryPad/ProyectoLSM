@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,7 +33,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.util.concurrent.Executors
 
 @Composable
-fun CameraScreen() {
+fun CameraScreen(
+    onRegresar: () -> Unit
+) {
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -464,8 +467,10 @@ fun CameraScreen() {
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .padding(
-                    horizontal = 16.dp,
-                    vertical = 40.dp
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 95.dp,
+                    bottom = 16.dp
                 )
                 .background(
                     color = Color(0xFF17212B).copy(alpha = 0.88f),
@@ -526,6 +531,22 @@ fun CameraScreen() {
                 color = Color.White
             )
         }
+
+        // BOTÓN PARA REGRESAR AL MENÚ
+        Button(
+            onClick = onRegresar,
+
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(
+                    start = 16.dp,
+                    top = 16.dp
+                )
+        ) {
+
+            Text("← Regresar")
+        }
+
     }
 }
 
